@@ -1,0 +1,63 @@
+# EDEN BLISS - MASTER ARCHITECTURE, PERFORMANCE & SECURITY RULES (.cursorrules)
+
+## 1. Brand Identity & Anti-AI 3-Color System
+- **Brand Name:** Eden Bliss (Luxury Minimalist & Editorial Clothing Brand)
+- **Strict 3-Color Palette (60-30-10 Rule):**
+  1. **60% Dominant:** Warm Alabaster / Raw Linen (`#FAF7F2` light, `#121110` dark)
+  2. **30% Secondary:** Deep Obsidian Espresso (`#1C1917` text, `#E6E1DA` borders)
+  3. **10% Accent:** Botanical Sage Green (`#3F5A45` hover `#2F4534`) + Warm Terracotta (`#9E473B`) strictly for Discount/Off badges and errors.
+- **Self-Hosted Fonts (Zero External Font Calls):** Use `next/font/google` to self-host `Cormorant Garamond` (weights `600`, `700` only) and `Plus Jakarta Sans` (weights `400`, `500`, `600` only) with `display: 'swap'` and `preload: true`.
+
+## 2. 100% Free Performance & Speed Architecture (MANDATORY)
+1. **Zero Frontend API Exposure:** Never expose database URLs, internal API endpoints, or secrets in client code. Import `'server-only'` in all database, Redis, auth, and security modules. Use Next.js Server Components for reads and Server Actions / internal BFF Route Handlers for mutations.
+2. **Skeleton Loading Screens:** Every page (`loading.tsx`) and async component (`<Suspense>`) must render custom shimmer skeleton loaders matching the exact layout height to prevent Cumulative Layout Shift (CLS).
+3. **Prevent Duplicate API Calls:**
+   - Wrap server data fetchers in React `cache()`.
+   - Use `AbortController` on client fetches and block double-clicks on buttons (`isPending` disabled state + idempotency key on checkout).
+4. **Debounce Search & Autocomplete:** All search bars, filter sliders, and autocomplete inputs must use a `300ms` debounce hook (`useDebounce`) before triggering queries.
+5. **Paginate All API & DB Results:** Never return unbounded arrays. Enforce cursor or `page` + `limit` pagination (default `limit = 12`, max `limit = 50`) on all product, review, order, and user queries.
+6. **CDN & Browser Caching for Static Files:** Configure `next.config.ts` headers with `Cache-Control: public, max-age=31536000, immutable` for `/_next/static/*`, fonts, and optimized images.
+7. **Free Background Job Queue:** Offload slow non-blocking tasks (audit logging, order status history logging, analytics, image cleanup) using Next.js 15 `after()` API or a lightweight in-process async worker queue so user responses return in <100ms.
+8. **Fix N+1 Queries:** Never run database queries inside loops. Use a single Mongoose `.populate({ path: 'category sizes.sizeId', select: '...' })` or a single `$lookup` aggregation pipeline.
+9. **Enable Brotli & Gzip Compression:** Set `compress: true` in `next.config.ts` and serve pre-compressed assets.
+10. **Free Redis + In-Memory LRU Cache:** Cache frequently accessed read data (StoreSettings, active Categories, Size chart in meters, featured Products) in Upstash Redis (`REDIS_URL`) with an automatic fallback to a zero-cost in-memory LRU cache (`Map` with TTL eviction). Invalidate cache keys automatically on Admin CRUD updates.
+11. **Remove Unused Dependencies & Split JS by Page:** Enable `experimental.optimizePackageImports: ['lucide-react', 'framer-motion']` in `next.config.ts`. Dynamically lazy-load heavy components (Fullscreen Image Lightbox, Outfit Look Modal, Admin Modals) using `next/dynamic({ ssr: false })`.
+12. **Set Timeouts on External Calls:** Every `fetch()` call must include `signal: AbortSignal.timeout(Number(process.env.EXTERNAL_API_TIMEOUT_MS) || 5000)`.
+13. **Stream Responses Token-by-Token:** Any AI sizing/styling assistant or long streaming response must use `ReadableStream` / Server-Sent Events to stream tokens progressively.
+14. **Optimistic UI Updates with Automatic Rollback:** For Wishlist heart toggles, Cart quantity changes, and Admin status toggles, use `useOptimistic` or Zustand optimistic actions to update the UI in 0ms before the server responds. If the server response fails or is cancelled, roll back the state immediately and display a Sonner error toast.
+15. **Lazy Load Below-the-Fold Images:** Only the Hero banner image gets `priority={true}`. All product card, category, and review images below the screen must use `loading="lazy"`, `decoding="async"`, responsive `sizes`, and WebP/AVIF compression.
+16. **Run Independent Requests in Parallel:** Always use `await Promise.all([...])` for independent DB queries (e.g., fetching categories, products, and store settings simultaneously).
+17. **Database Indexes for Common Queries:** Define compound Mongoose indexes on:
+    - `Product`: `{ slug: 1 }`, `{ category: 1, isActive: 1, finalPrice: 1 }`, `{ isFeatured: 1, isActive: 1 }`, and text index on `{ title: 'text', storyDescription: 'text' }`
+    - `Order`: `{ user: 1, createdAt: -1 }`, `{ status: 1, createdAt: -1 }`, `{ orderNumber: 1 }`
+    - `User`: `{ email: 1 }`, `{ isOnline: 1, lastActiveAt: -1 }`
+18. **Trace Slow Backend Requests (OpenTelemetry):** Wrap API routes and DB calls in an OpenTelemetry span / timing wrapper (`src/lib/telemetry.ts`) that logs any query or request exceeding `SLOW_REQUEST_THRESHOLD_MS` (400ms).
+19. **Server & Build-Time Rendering (RSC + ISR):** Render storefront pages on the server using React Server Components and Incremental Static Regeneration (`revalidate = 60`), and statically generate `/about`, `/faq`, `/privacy`, and `/terms` at build time.
+20. **Load Third-Party Scripts After Page Load:** If any third-party script is added, load it exclusively via `next/script` with `strategy="lazyOnload"`.
+21. **Virtualize Long Lists:** Use `@tanstack/react-virtual` for long lists in Admin tables (Users, Orders, Products, Audit Logs) and large review lists so only visible rows are mounted in the DOM.
+22. **Select Only Required Columns:** Every Mongoose read query must chain `.select('only needed fields')` and `.lean()` (e.g., never select `passwordHash` or unused arrays).
+23. **Database Connection Pooling:** Cache a single global Mongoose connection in `src/lib/db.ts` with `maxPoolSize: 10`, `minPoolSize: 2`, and `bufferCommands: false`.
+24. **Prevent Unnecessary Re-Renders:** Use atomic Zustand selectors (`useCartStore(s => s.items.length)`), `React.memo` on ProductCard, and stable `useCallback` handlers.
+25. **Optimize for Slow Phones & 3G Networks:** Use GPU-accelerated CSS (`transform`, `opacity`) instead of layout-thrashing animations, and respect `prefers-reduced-motion`.
+
+## 3. 20-Point Hardened Security Checklist (NEVER VIOLATE)
+1. **Row-Level Security (RLS) in MongoDB:** Create a mandatory `withRowLevelSecurity(session, filter)` helper. Every customer query on `Order`, `Review`, or `User` MUST enforce `{ user: session.userId }` at the query level so a user can never read or modify another user's rows.
+2. **Auth on Every API Route:** Wrap every protected API route and Server Action in `requireAuth()` or `requireAdmin()`. Reject unauthenticated requests with `401 Unauthorized` and check `user.isBlocked` on every request.
+3. **Never Trust the Frontend:** Never accept `price`, `discount`, `subtotal`, `shippingFee`, `grandTotal`, or `role` from client payloads. Always fetch actual product prices, discounts, and shipping rates from MongoDB on the server during checkout.
+4. **Rate Limiting:** Enforce sliding-window IP + User ID rate limiting (`src/lib/rate-limit.ts`) on all routes—strictly `5 req/min` on `/api/auth/*`, password changes, and checkout; `60 req/min` on general endpoints.
+5. **Sanitize User Input:** Recursively strip `$` and `.` keys (`mongoSanitize`), trim whitespace, escape regex special characters in search strings (`escapeRegExp`), and strip `<script>`/HTML tags from comments, reviews, and custom waist notes.
+6. **Parameterized / Strictly Typed Queries:** Parse all inputs with strict `zod` schemas into primitive types before passing them to Mongoose. Never pass raw `req.body` or `searchParams` directly into Mongoose query filters.
+7. **Lock Down CORS:** Configure middleware to only allow origins listed in `process.env.ALLOWED_CORS_ORIGINS` (`APP_BASE_URL`). Block unauthorized cross-origin `POST/PUT/PATCH/DELETE` requests and validate `Origin`/`Host` headers against CSRF.
+8. **HTTPS Everywhere:** Set `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, set `secure: process.env.NODE_ENV === 'production'`, `httpOnly: true`, `sameSite: 'lax'` on all auth cookies.
+9. **Verify Webhook Signatures:** Any webhook route must verify the raw body signature using `crypto.createHmac('sha256', process.env.WEBHOOK_SECRET)` and `crypto.timingSafeEqual()`.
+10. **No Commands from User/Chat Text:** Strictly forbid `eval()`, `new Function()`, `child_process.exec()`, or dynamic shell execution anywhere in the codebase.
+11. **Debug Mode Off in Prod:** In `next.config.ts`, set `productionBrowserSourceMaps: false` and `poweredByHeader: false`. When `NODE_ENV === 'production'`, disable Mongoose debug logging and return generic client error messages without stack traces.
+12. **Security Review Gate:** Every Server Action and API Route must pass the 5-step gate: Rate Limit -> Auth & Blocked Check -> Zod Validation & Input Sanitization -> RLS/IDOR Ownership Check -> Audit Log.
+13. **Private Storage Buckets:** Never store raw user uploads in a publicly listable folder. Store uploaded files in `PRIVATE_STORAGE_DIR` (outside `/public`) with random UUID filenames and serve validated images through a controlled caching media route.
+14. **Lock Dangerous Tools:** Disable database seed routes unless `process.env.ENABLE_SEED_ENDPOINT === 'true'` and `NODE_ENV !== 'production'`. Require Admin password re-verification before deleting users or changing user passwords.
+15. **Hide Admin Pages Properly:** Enforce Admin verification in both `middleware.ts` AND the server-side `app/admin/layout.tsx`. If a non-admin visits `/admin/*`, rewrite/return `notFound()` (`404`) so attackers cannot even detect admin routes or download admin JS bundles.
+16. **Dependency Hygiene:** Use only maintained, vulnerability-free packages (`jose`, `bcryptjs`, `zod`, `mongoose`, `zustand`, `framer-motion`, `@tanstack/react-virtual`).
+17. **Strict Security Headers:** Inject `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Permissions-Policy: camera=(), microphone=(), geolocation=()` in `next.config.ts` and `middleware.ts`.
+18. **Verify File Upload Magic Bytes:** Never trust `file.type` alone. Inspect the actual binary magic bytes (file header buffer) on the server to confirm JPEG (`FF D8 FF`), PNG (`89 50 4E 47`), or WebP (`52 49 46 46`), enforce `<= 2MB`, strip EXIF metadata, and re-encode.
+19. **Stop IDOR (Insecure Direct Object Reference) Bugs:** Validate every ID with `mongoose.Types.ObjectId.isValid(id)`. Before reading, updating, or deleting any Order, Profile, Wishlist, or Review, verify `doc.user.toString() === session.userId` (unless verified Admin).
+20. **Immutable Admin Audit Logs:** Log every Admin action (Create/Update/Delete Category, Size, Product; Order Status Update; User Block/Delete; User Password Reset; Settings Change) into an `AuditLog` MongoDB collection with `adminId`, `action`, `targetType`, `targetId`, `ipAddress`, `userAgent`, and `diff`.

@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+dist
+.turbo
+coverage
+*.log
+.env
+.env.local
+.env.*.local
+storage/private-uploads/*
+!storage/private-uploads/.gitkeep
+tsconfig.tsbuildinfo
+/.history

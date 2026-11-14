@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { PageNav, PAGE_SIZE } from "@/components/page-nav";
 import { ProductGrid } from "@/components/product-grid";
 import { SkeletonGrid } from "@/components/skeleton-grid";
 import { clientFetch } from "@/lib/client-fetch";
@@ -64,7 +65,7 @@ export function CatalogRail({
       return;
     }
     const controller = new AbortController();
-    const params = new URLSearchParams({ page: String(page), limit: "12", sort });
+    const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE), sort });
     if (debouncedQuery.trim()) params.set("q", debouncedQuery.trim());
     if (category) params.set("category", category);
     if (subcategory) params.set("subcategory", subcategory);
@@ -232,19 +233,7 @@ export function CatalogRail({
           />
         )}
       </div>
-      {pages > 1 ? (
-        <div className="mt-8 flex items-center gap-4 text-[11px] uppercase tracking-[0.14em]">
-          <button type="button" disabled={page <= 1 || loading} className="disabled:opacity-40" onClick={() => setPage((current) => current - 1)}>
-            Previous
-          </button>
-          <span className="text-muted">
-            {page} / {pages}
-          </span>
-          <button type="button" disabled={page >= pages || loading} className="disabled:opacity-40" onClick={() => setPage((current) => current + 1)}>
-            Next
-          </button>
-        </div>
-      ) : null}
+      <PageNav page={page} pages={pages} total={total} onPage={setPage} />
     </div>
   );
 }

@@ -59,6 +59,9 @@ export default async function ProfilePage({
           orders={orders.orders}
           currency={settings.currencySymbol}
           initialTab={params.tab === "orders" ? "orders" : "details"}
+          orderPage={orders.page}
+          orderPages={orders.pages}
+          orderTotal={orders.total}
         />
       </div>
     </section>

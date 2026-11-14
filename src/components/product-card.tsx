@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { EditorialImage } from "@/components/editorial-image";
 import { clientFetch } from "@/lib/client-fetch";
 import { RESTRICTED_MESSAGE } from "@/lib/constants";
+import { redirectToLogin } from "@/lib/login-redirect";
 import { formatMoney } from "@/lib/prices";
 import { useSessionStore } from "@/store/session-store";
 import { useWishlistStore } from "@/store/wishlist-store";
@@ -33,8 +34,7 @@ export const ProductCard = memo(function ProductCard({
     if (pending) return;
     const guest = !authenticated && !useSessionStore.getState().user;
     if (guest) {
-      useWishlistStore.getState().toggle(product.id);
-      toast.success(saved ? "Removed from your wishlist." : "Saved to your wishlist.");
+      redirectToLogin();
       return;
     }
 

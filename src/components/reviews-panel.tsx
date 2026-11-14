@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { StarRow } from "@/components/star-row";
 import { Button } from "@/components/ui/button";
 import { VirtualTable } from "@/components/virtual-table";
+import { LoadMore } from "@/components/page-nav";
 import { clientFetch } from "@/lib/client-fetch";
+import { loginHref } from "@/lib/login-redirect";
 
 type ReviewItem = {
   id: string;
@@ -25,6 +28,7 @@ export function ReviewsPanel({
   initialAverage,
   initialCount,
   initialBreakdown,
+  initialPages,
 }: {
   productId: string;
   authenticated: boolean;
@@ -32,8 +36,13 @@ export function ReviewsPanel({
   initialAverage: number;
   initialCount: number;
   initialBreakdown: Breakdown;
+  initialPages: number;
 }) {
+  const pathname = usePathname();
   const [reviews, setReviews] = useState(initialReviews);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [reviewPages, setReviewPages] = useState(initialPages);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [average, setAverage] = useState(initialAverage);
   const [count, setCount] = useState(initialCount);
   const [breakdown, setBreakdown] = useState(initialBreakdown);
@@ -41,6 +50,25 @@ export function ReviewsPanel({
   const [comment, setComment] = useState("");
   const [pending, setPending] = useState(false);
   const busiest = Math.max(1, ...Object.values(breakdown));
+
+  async function loadMore() {
+    if (loadingMore || reviewPage >= reviewPages) return;
+    const nextPage = reviewPage + 1;
+    setLoadingMore(true);
+    try {
+      const response = await clientFetch(`/api/reviews?productId=${productId}&page=${nextPage}&limit=10`);
+      const data = (await response.json()) as { reviews?: ReviewItem[]; pages?: number };
+      if (!response.ok || !data.reviews) return;
+      setReviews((current) => {
+        const seen = new Set(current.map((review) => review.id));
+        return [...current, ...data.reviews!.filter((review) => !seen.has(review.id))];
+      });
+      setReviewPage(nextPage);
+      setReviewPages(data.pages ?? reviewPages);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -128,6 +156,7 @@ export function ReviewsPanel({
             ))}
           </ul>
         )}
+        <LoadMore shown={reviews.length} total={count} loading={loadingMore} onLoad={() => void loadMore()} />
       </div>
 
       <div className="mt-8">
@@ -163,7 +192,7 @@ export function ReviewsPanel({
           </form>
         ) : (
           <p className="text-sm text-muted">
-            <Link href="/login" className="nav-link">
+            <Link href={loginHref(pathname)} className="nav-link">
               Sign in
             </Link>{" "}
             to leave a note from the fitting room.

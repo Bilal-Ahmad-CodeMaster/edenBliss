@@ -23,15 +23,21 @@ export default async function LoginPage({
   const nextPath = safeNextPath(params.next);
 
   return (
-    <section className="mx-auto grid max-w-page gap-12 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:px-10 lg:py-20">
-      <div>
+    <section className="mx-auto grid max-w-md gap-8 px-4 pb-16 pt-6 sm:px-6 lg:max-w-page lg:grid-cols-2 lg:gap-12 lg:px-10 lg:py-20">
+      <div className="hidden lg:block">
         <p className="text-[11px] uppercase tracking-[0.2em] text-muted">Account</p>
         <h1 className="mt-3 font-serif text-5xl leading-none sm:text-7xl">Welcome back.</h1>
         <p className="mt-5 max-w-md text-sm leading-7 text-muted">
           Your bag and wishlist from this browser travel with you when you sign in. Cash on delivery remains the only way to pay.
         </p>
       </div>
-      <LoginForm restricted={restricted} nextPath={nextPath} />
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-muted lg:hidden">Account</p>
+        <h1 className="mt-3 font-serif text-4xl leading-none lg:hidden">Sign in</h1>
+        <div className="mt-6 lg:mt-0">
+          <LoginForm restricted={restricted} nextPath={nextPath} />
+        </div>
+      </div>
     </section>
   );
 }

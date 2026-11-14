@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 const settingsSchema = z.object({
   supportEmail: z.string().trim().email().max(120),
+  adminEmail: z.string().trim().email().max(120),
   supportPhone: z.string().trim().min(6).max(40),
   currencySymbol: z.string().trim().min(1).max(8),
   standardShippingRate: z.coerce.number().min(0).max(100000),
@@ -46,6 +47,8 @@ export async function PATCH(request: Request) {
 
   const next = {
     ...parsed.data,
+    supportEmail: parsed.data.supportEmail.toLowerCase(),
+    adminEmail: parsed.data.adminEmail.toLowerCase(),
     supportPhone: stripHtml(parsed.data.supportPhone),
     announcementBarText: stripHtml(parsed.data.announcementBarText),
     storeName: "Eden Bliss",

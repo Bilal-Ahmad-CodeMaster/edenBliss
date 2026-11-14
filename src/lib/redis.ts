@@ -22,6 +22,10 @@ function pruneMemory() {
   }
 }
 
+function describe(error: unknown) {
+  return error instanceof Error ? error.message : "Unknown cache error";
+}
+
 function remember(key: string, raw: string, seconds: number) {
   memory.set(key, { value: raw, expires: Date.now() + seconds * 1000 });
   pruneMemory();
@@ -33,7 +37,7 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
       const raw = await upstashCommand<string>(["GET", key]);
       if (typeof raw === "string") return JSON.parse(raw) as T;
     } catch (error) {
-      console.error("Redis read failed. Using the in-memory cache.", error);
+      console.error("Redis read failed. Using the in-memory cache.", describe(error));
     }
   }
 
@@ -55,7 +59,7 @@ export async function cacheSet(key: string, value: unknown, seconds?: number) {
   try {
     await upstashCommand(["SET", key, raw, "EX", ttl]);
   } catch (error) {
-    console.error("Redis write failed. The in-memory cache still holds the value.", error);
+    console.error("Redis write failed. The in-memory cache still holds the value.", describe(error));
   }
 }
 
@@ -65,7 +69,7 @@ export async function cacheDel(keys: string[]) {
   try {
     await upstashCommand(["DEL", ...keys]);
   } catch (error) {
-    console.error("Redis delete failed.", error);
+    console.error("Redis delete failed.", describe(error));
   }
 }
 

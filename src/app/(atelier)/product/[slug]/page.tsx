@@ -40,7 +40,7 @@ export default async function ProductPage({ params }: Props) {
   const [session, settings, reviews, related] = await Promise.all([
     readSession(),
     getStoreSettings(),
-    getProductReviews(product.id, 1, 12),
+    getProductReviews(product.id, 1, 10),
     getRelatedProducts(product.categorySlug, product.id),
   ]);
 
@@ -88,6 +88,7 @@ export default async function ProductPage({ params }: Props) {
               initialAverage={product.averageRating}
               initialCount={product.reviewCount}
               initialBreakdown={reviews.breakdown}
+              initialPages={reviews.pages}
             />
           </div>
         </div>

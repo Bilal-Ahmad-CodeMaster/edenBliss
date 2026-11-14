@@ -1,4 +1,4 @@
-export const DEFAULT_PAGE_LIMIT = 12;
+export const DEFAULT_PAGE_LIMIT = 10;
 export const MAX_PAGE_LIMIT = 50;
 
 export function parsePageLimit(pageValue: unknown, limitValue: unknown) {

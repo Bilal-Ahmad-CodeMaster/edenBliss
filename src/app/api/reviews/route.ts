@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
+import { getProductReviews } from "@/lib/catalog";
 import { connectDB } from "@/lib/db";
 import { enforceRateLimit } from "@/lib/guard";
 import { invalidateCatalogCache } from "@/lib/redis";
@@ -11,6 +12,23 @@ import { Review } from "@/models/Review";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
+  const limited = await enforceRateLimit(request);
+  if (limited) return limited;
+  const url = new URL(request.url);
+  const productId = url.searchParams.get("productId") ?? "";
+  if (!isValidObjectId(productId)) {
+    return NextResponse.json({ message: "Choose a piece from the shop." }, { status: 400 });
+  }
+  const result = await getProductReviews(productId, Number(url.searchParams.get("page") || 1), 10);
+  return NextResponse.json({
+    reviews: result.reviews,
+    page: result.page,
+    pages: result.pages,
+    total: result.total,
+  });
+}
 
 export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, "auth");

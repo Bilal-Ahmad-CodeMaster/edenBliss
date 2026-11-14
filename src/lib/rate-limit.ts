@@ -80,7 +80,10 @@ export async function consumeRateLimit(key: string, scope: "auth" | "public"): P
     const redis = await redisLimit(`eden:rl:${key}`, limit, window);
     if (redis) return redis;
   } catch (error) {
-    console.error("Redis rate limit failed. Using the in-memory window.", error);
+    console.error(
+      "Redis rate limit failed. Using the in-memory window.",
+      error instanceof Error ? error.message : "Unknown rate limit error",
+    );
   }
   return memoryLimit(key, limit, window);
 }

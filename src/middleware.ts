@@ -118,6 +118,8 @@ export async function middleware(request: NextRequest) {
   const needsSession =
     pathname.startsWith("/account") ||
     pathname.startsWith("/profile") ||
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/wishlist") ||
     pathname.startsWith("/order-success") ||
     isGuardedApi(pathname);
   if (!token) {

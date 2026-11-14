@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ContactForm } from "@/components/contact-form";
 import { getStoreSettings } from "@/lib/catalog";
 import { telHref } from "@/lib/utils";
 
@@ -23,7 +24,10 @@ export default async function ContactPage() {
       <p className="mt-6 text-sm leading-7 text-muted">
         For fit notes, cloth questions, and the progress of a cash-on-delivery order, write or call. The desk answers in the order the messages arrive.
       </p>
-      <dl className="mt-10 space-y-6">
+      <div className="mt-10 max-w-xl">
+        <ContactForm />
+      </div>
+      <dl className="mt-12 space-y-6">
         <div>
           <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Email</dt>
           <dd className="mt-2 font-serif text-3xl">

@@ -9,6 +9,7 @@ import { SearchOverlay } from "@/components/search-overlay";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useSessionStore } from "@/store/session-store";
 import { useWishlistCount } from "@/store/wishlist-store";
+import { loginHref } from "@/lib/login-redirect";
 import { telHref } from "@/lib/utils";
 import type { NavCategory, PublicUser, StoreSettingsDTO } from "@/types/commerce";
 
@@ -37,6 +38,7 @@ export function SiteHeader({
   const storeUser = useSessionStore((state) => state.user);
   const activeUser = ready ? storeUser : user;
   const accountHref = activeUser ? "/profile" : "/login";
+  const wishlistHref = activeUser ? "/wishlist" : loginHref("/wishlist");
   const isAdmin = activeUser?.role === "ADMIN";
 
   return (
@@ -96,7 +98,7 @@ export function SiteHeader({
         <div className="flex items-center gap-1 sm:gap-2">
           <SearchOverlay currency={currency} />
           <Link
-            href="/wishlist"
+            href={wishlistHref}
             className="relative flex h-10 w-10 items-center justify-center transition hover:text-sage"
             aria-label={`Wishlist, ${wishlistCount} saved`}
           >
@@ -127,7 +129,7 @@ export function SiteHeader({
                     <Link href="/profile" className="block px-2 py-2 text-[11px] uppercase tracking-[0.14em] hover:text-sage" onClick={() => setAccountOpen(false)}>
                       Profile
                     </Link>
-                    <Link href="/wishlist" className="block px-2 py-2 text-[11px] uppercase tracking-[0.14em] hover:text-sage" onClick={() => setAccountOpen(false)}>
+                    <Link href={wishlistHref} className="block px-2 py-2 text-[11px] uppercase tracking-[0.14em] hover:text-sage" onClick={() => setAccountOpen(false)}>
                       Wishlist
                     </Link>
                   </>

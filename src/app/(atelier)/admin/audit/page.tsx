@@ -17,11 +17,11 @@ export default async function AdminAuditPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   const params = await searchParams;
-  const audit = await listAuditLogs(params.page, 20);
+  const audit = await listAuditLogs(params.page, 10);
   return (
     <div>
       <DeskHeading eyebrow="Audit" title="What the desk has touched." />
-      <AuditDesk rows={audit.rows} />
+      <AuditDesk rows={audit.rows} page={audit.page} pages={audit.pages} total={audit.total} />
     </div>
   );
 }

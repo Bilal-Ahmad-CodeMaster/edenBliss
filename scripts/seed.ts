@@ -26,7 +26,13 @@ export async function runSeed(options: { disconnect?: boolean } = { disconnect: 
 
   await StoreSettings.findOneAndUpdate(
     { singletonKey: "eden-bliss" },
-    { $set: defaultStoreSettings, $setOnInsert: { singletonKey: "eden-bliss" } },
+    {
+      $set: defaultStoreSettings,
+      $setOnInsert: {
+        singletonKey: "eden-bliss",
+        adminEmail: (process.env.INITIAL_ADMIN_EMAIL || defaultStoreSettings.supportEmail).toLowerCase(),
+      },
+    },
     { upsert: true, returnDocument: "after" },
   );
   console.log("Store settings are in place.");

@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PageNav } from "@/components/page-nav";
 import { toast } from "sonner";
 import { EditorialImage } from "@/components/editorial-image";
 import { LogoutButton } from "@/components/logout-button";
@@ -21,12 +23,19 @@ export function ProfileDesk({
   orders,
   currency,
   initialTab,
+  orderPage,
+  orderPages,
+  orderTotal,
 }: {
   profile: CustomerProfile;
   orders: CustomerOrder[];
   currency: string;
   initialTab: "details" | "orders";
+  orderPage: number;
+  orderPages: number;
+  orderTotal: number;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState(initialTab);
   const [form, setForm] = useState(profile);
   const [pending, setPending] = useState(false);
@@ -255,6 +264,12 @@ export function ProfileDesk({
       ) : (
         <div className="mt-8">
           <OrderHistory orders={orders} currency={currency} />
+          <PageNav
+            page={orderPage}
+            pages={orderPages}
+            total={orderTotal}
+            onPage={(next) => router.push(`/profile?tab=orders&page=${next}`)}
+          />
         </div>
       )}
 

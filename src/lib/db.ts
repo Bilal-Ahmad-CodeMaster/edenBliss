@@ -31,37 +31,38 @@ export function isDatabaseConfigured() {
   return true;
 }
 
-export async function connectDB() {
-  return traceSpan("db.connect", async () => {
-    const uri = process.env.MONGODB_URI;
-    if (!uri || !isDatabaseConfigured()) {
-      throw new Error("MONGODB_URI is not configured.");
-    }
+export function connectDB() {
+  if (cached.conn) return Promise.resolve(cached.conn);
+  if (cached.promise) return cached.promise;
 
-    if (cached.conn) return cached.conn;
+  const uri = process.env.MONGODB_URI;
+  if (!uri || !isDatabaseConfigured()) {
+    return Promise.reject(new Error("MONGODB_URI is not configured."));
+  }
 
-    if (!cached.promise) {
-      usePublicDnsWhenLoopback();
-      mongoose.set("strictQuery", true);
-      mongoose.set("debug", false);
-      cached.promise = mongoose.connect(uri, {
-        bufferCommands: false,
-        maxPoolSize: poolNumber("MONGODB_MAX_POOL_SIZE", 10),
-        minPoolSize: poolNumber("MONGODB_MIN_POOL_SIZE", 2),
-        connectTimeoutMS: poolNumber("MONGODB_CONNECT_TIMEOUT_MS", 5000),
-        socketTimeoutMS: poolNumber("MONGODB_SOCKET_TIMEOUT_MS", 30000),
-        serverSelectionTimeoutMS: poolNumber("MONGODB_CONNECT_TIMEOUT_MS", 5000),
-        autoIndex: true,
-      });
-    }
+  usePublicDnsWhenLoopback();
+  mongoose.set("strictQuery", true);
+  mongoose.set("debug", false);
 
-    try {
-      cached.conn = await cached.promise;
-    } catch (error) {
+  cached.promise = traceSpan("db.connect", () =>
+    mongoose.connect(uri, {
+      bufferCommands: false,
+      maxPoolSize: poolNumber("MONGODB_MAX_POOL_SIZE", 10),
+      minPoolSize: poolNumber("MONGODB_MIN_POOL_SIZE", 2),
+      connectTimeoutMS: poolNumber("MONGODB_CONNECT_TIMEOUT_MS", 5000),
+      socketTimeoutMS: poolNumber("MONGODB_SOCKET_TIMEOUT_MS", 30000),
+      serverSelectionTimeoutMS: poolNumber("MONGODB_CONNECT_TIMEOUT_MS", 5000),
+      autoIndex: true,
+    }),
+  )
+    .then((connection) => {
+      cached.conn = connection;
+      return connection;
+    })
+    .catch((error: unknown) => {
       cached.promise = null;
       throw error;
-    }
+    });
 
-    return cached.conn;
-  });
+  return cached.promise;
 }

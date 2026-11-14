@@ -17,7 +17,7 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   const params = await searchParams;
-  const users = await listAdminUsers(params.page, 12);
+  const users = await listAdminUsers(params.page, 10);
   return (
     <div>
       <DeskHeading eyebrow="Clients" title="Who is in the house." />

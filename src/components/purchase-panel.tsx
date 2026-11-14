@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { clientFetch } from "@/lib/client-fetch";
 import { RESTRICTED_MESSAGE } from "@/lib/constants";
+import { redirectToLogin } from "@/lib/login-redirect";
 import {
   formatCentimeters,
   formatInches,
@@ -45,8 +46,7 @@ export function PurchasePanel({
   async function saveWishlist() {
     const signedIn = authenticated || Boolean(useSessionStore.getState().user);
     if (!signedIn) {
-      useWishlistStore.getState().toggle(product.id);
-      toast.success(saved ? "Removed from your wishlist." : "Saved to your wishlist.");
+      redirectToLogin();
       return;
     }
 

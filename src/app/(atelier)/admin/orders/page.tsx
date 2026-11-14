@@ -18,7 +18,7 @@ export default async function AdminOrdersPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   const params = await searchParams;
-  const [orders, settings] = await Promise.all([listAdminOrders({ page: params.page, limit: 12 }), getStoreSettings()]);
+  const [orders, settings] = await Promise.all([listAdminOrders({ page: params.page, limit: 10 }), getStoreSettings()]);
 
   return (
     <div>

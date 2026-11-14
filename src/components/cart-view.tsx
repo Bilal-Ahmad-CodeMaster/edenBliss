@@ -7,6 +7,8 @@ import { BagSummary } from "@/components/bag-summary";
 import { EditorialImage } from "@/components/editorial-image";
 import { Button } from "@/components/ui/button";
 import { syncCart } from "@/lib/client-cart";
+import { loginHref } from "@/lib/login-redirect";
+import { useSessionStore } from "@/store/session-store";
 import { formatMeters, MEASUREMENT_KEYS } from "@/lib/measurements";
 import { formatMoney } from "@/lib/prices";
 import { useCartStore } from "@/store/cart-store";
@@ -23,6 +25,7 @@ export function CartView({
 }) {
   const items = useCartStore((state) => state.items);
   const hydrated = useCartStore((state) => state.hydrated);
+  const signedIn = authenticated || Boolean(useSessionStore((state) => state.user));
   const [pending, setPending] = useState(false);
 
   async function persist(next: CartItem[]) {
@@ -129,7 +132,7 @@ export function CartView({
         </div>
         <p className="mt-4 text-sm leading-6 text-muted">Payment is cash on delivery. The total is confirmed by the house at checkout.</p>
         <Button asChild className="mt-6 w-full">
-          <Link href="/checkout">Continue to checkout</Link>
+          <Link href={signedIn ? "/checkout" : loginHref("/checkout")}>Continue to checkout</Link>
         </Button>
       </aside>
     </div>

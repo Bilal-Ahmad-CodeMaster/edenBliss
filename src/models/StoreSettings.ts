@@ -5,6 +5,7 @@ const storeSettingsSchema = new Schema(
     singletonKey: { type: String, required: true, unique: true, default: "eden-bliss", immutable: true },
     storeName: { type: String, required: true, trim: true, default: "Eden Bliss" },
     supportEmail: { type: String, required: true, trim: true, lowercase: true },
+    adminEmail: { type: String, trim: true, lowercase: true, default: "" },
     supportPhone: { type: String, required: true, trim: true },
     currencySymbol: { type: String, required: true, trim: true, default: "Rs." },
     standardShippingRate: { type: Number, required: true, min: 0, default: 450 },

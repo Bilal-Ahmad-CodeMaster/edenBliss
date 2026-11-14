@@ -9,7 +9,7 @@ import { clientFetch } from "@/lib/client-fetch";
 import { telHref } from "@/lib/utils";
 import type { StoreSettingsDTO } from "@/types/commerce";
 
-export function SettingsForm({ settings }: { settings: StoreSettingsDTO }) {
+export function SettingsForm({ settings, adminEmail }: { settings: StoreSettingsDTO; adminEmail: string }) {
   const [pending, setPending] = useState(false);
 
   async function onSubmit(formData: FormData) {
@@ -21,6 +21,7 @@ export function SettingsForm({ settings }: { settings: StoreSettingsDTO }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           supportEmail: formData.get("supportEmail"),
+          adminEmail: formData.get("adminEmail"),
           supportPhone: formData.get("supportPhone"),
           currencySymbol: formData.get("currencySymbol"),
           standardShippingRate: formData.get("standardShippingRate"),
@@ -57,8 +58,13 @@ export function SettingsForm({ settings }: { settings: StoreSettingsDTO }) {
         .
       </p>
       <div className="space-y-2">
+        <Label htmlFor="adminEmail">Admin inbox</Label>
+        <Input id="adminEmail" name="adminEmail" type="email" defaultValue={adminEmail} required />
+        <p className="text-xs leading-5 text-muted">Order confirmations and contact notes are mailed here.</p>
+      </div>
+      <div className="space-y-2">
         <Label htmlFor="supportEmail">Support email</Label>
-        <Input id="supportEmail" name="supportEmail" defaultValue={settings.supportEmail} />
+        <Input id="supportEmail" name="supportEmail" type="email" defaultValue={settings.supportEmail} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="supportPhone">Support phone</Label>

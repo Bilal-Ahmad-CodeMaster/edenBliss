@@ -60,7 +60,7 @@ export function ProductDesk({
 
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({ page: String(page), limit: "12", q: debounced });
+    const params = new URLSearchParams({ page: String(page), limit: "10", q: debounced });
     if (category) params.set("category", category);
     setLoading(true);
     clientFetch(`/api/admin/products?${params}`, { signal: controller.signal })
@@ -204,7 +204,7 @@ export function ProductDesk({
           </div>
         )}
       />
-      <Pager page={page} pages={pages} onPage={setPage} />
+      <Pager page={page} pages={pages} total={total} onPage={setPage} />
       <DeskDialog
         open={editor !== null}
         onOpenChange={(open) => {

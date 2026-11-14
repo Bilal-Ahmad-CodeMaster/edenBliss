@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { updateCustomerProfile } from "@/lib/account";
 import { requireUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/guard";
+import { enqueueJob } from "@/lib/job-queue";
+import { sendOrderNotice } from "@/lib/mail";
 import { placeCodOrder } from "@/lib/orders";
 import { readJson } from "@/lib/sanitize";
 import { checkoutFormSchema } from "@/lib/validators";
@@ -31,6 +33,12 @@ export async function POST(request: Request) {
       parsed.data.customFitNotes,
       parsed.data.idempotencyKey,
     );
+    if (!order.replayed) {
+      enqueueJob(async () => {
+        const sent = await sendOrderNotice(order.orderNumber);
+        if (!sent) console.error("The order notice was not mailed to the atelier.");
+      });
+    }
     let profileSaved = false;
     if (parsed.data.saveToProfile) {
       const profile = await updateCustomerProfile(auth.user.id, {

@@ -23,7 +23,7 @@ export default async function HomePage() {
     getStoreSettings(),
     getNavCategories(),
     getCatalogFacets(),
-    getShopProducts({ limit: 12, sort: "featured" }),
+    getShopProducts({ limit: 10, sort: "featured" }),
   ]);
 
   return (

@@ -1,6 +1,7 @@
 type UpstashConfig = { endpoint: string; token: string };
 
 export function upstashConfig(): UpstashConfig | null {
+  if (process.env.NEXT_PHASE === "phase-production-build") return null;
   const raw = process.env.REDIS_URL ?? "";
   if (!raw.startsWith("redis://") && !raw.startsWith("rediss://")) return null;
   if (raw.includes("<") || raw.includes("xxxxx") || raw.includes("endpoint")) return null;

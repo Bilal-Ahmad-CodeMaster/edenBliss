@@ -69,6 +69,7 @@ export function OrderDesk({
   const [page, setPage] = useState(initial.page);
   const [rows, setRows] = useState(initial.orders);
   const [pages, setPages] = useState(initial.pages);
+  const [total, setTotal] = useState(initial.total);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [openId, setOpenId] = useState("");
@@ -78,15 +79,16 @@ export function OrderDesk({
 
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({ page: String(page), limit: "12", q: debounced });
+    const params = new URLSearchParams({ page: String(page), limit: "10", q: debounced });
     if (status) params.set("status", status);
     setLoading(true);
     clientFetch(`/api/admin/orders?${params}`, { signal: controller.signal })
       .then(async (response) => {
-        const data = (await response.json()) as { orders?: OrderRow[]; pages?: number; message?: string };
+        const data = (await response.json()) as { orders?: OrderRow[]; pages?: number; total?: number; message?: string };
         if (!response.ok || !data.orders) throw new Error(data.message ?? "Orders could not be loaded.");
         setRows(data.orders);
         setPages(data.pages ?? 1);
+        setTotal(data.total ?? data.orders.length);
         setMessage("");
       })
       .catch((error: unknown) => {
@@ -197,7 +199,7 @@ export function OrderDesk({
           </div>
         )}
       />
-      <Pager page={page} pages={pages} onPage={setPage} />
+      <Pager page={page} pages={pages} total={total} onPage={setPage} />
 
       <DeskDialog
         open={Boolean(openId)}

@@ -190,7 +190,7 @@ function toCustomerOrder(order: OrderLean): CustomerOrder {
 
 export async function listOwnedOrders(userId: string, pageValue?: unknown) {
   await connectDB();
-  const paging = parsePageLimit(pageValue, 12);
+  const paging = parsePageLimit(pageValue, 10);
   const filter = { user: userId };
   return traceSpan("db.ownedOrders", async () => {
     const [rows, total] = await Promise.all([

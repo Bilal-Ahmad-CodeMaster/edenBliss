@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { clientFetch } from "@/lib/client-fetch";
 import { RESTRICTED_MESSAGE } from "@/lib/constants";
+import { loginHref } from "@/lib/login-redirect";
 import { safeNextPath } from "@/lib/utils";
 import { loginFormSchema, signupFormSchema, type LoginFormValues, type SignupFormValues } from "@/lib/validators";
 import { useCartStore } from "@/store/cart-store";
@@ -95,7 +96,7 @@ export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
       </Button>
       <p className="text-sm text-muted">
         Already with the house?{" "}
-        <Link href="/login" className="text-foreground underline-offset-4 hover:text-sage hover:underline">
+        <Link href={nextPath && nextPath !== "/" ? loginHref(nextPath) : "/login"} className="text-foreground underline-offset-4 hover:text-sage hover:underline">
           Sign in
         </Link>
       </p>
@@ -165,7 +166,10 @@ export function LoginForm({ restricted, nextPath = "/" }: { restricted: boolean;
       </Button>
       <p className="text-sm text-muted">
         New to the house?{" "}
-        <Link href="/signup" className="text-foreground underline-offset-4 hover:text-sage hover:underline">
+        <Link
+          href={nextPath && nextPath !== "/" ? `/signup?next=${encodeURIComponent(nextPath)}` : "/signup"}
+          className="text-foreground underline-offset-4 hover:text-sage hover:underline"
+        >
           Create an account
         </Link>
       </p>

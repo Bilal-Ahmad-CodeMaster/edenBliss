@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { LoadMore, PAGE_SIZE } from "@/components/page-nav";
 import { ProductGrid } from "@/components/product-grid";
 import { SkeletonGrid } from "@/components/skeleton-grid";
 import { clientFetch } from "@/lib/client-fetch";
@@ -45,7 +46,6 @@ export function ShopBrowser({
   const [high, setHigh] = useState(maxPrice > minPrice ? maxPrice : minPrice);
   const [products, setProducts] = useState(initialProducts);
   const [count, setCount] = useState(total);
-  const [pages, setPages] = useState(Math.max(1, Math.ceil(total / 12)));
   const [loading, setLoading] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
   const debouncedLow = useDebounce(low, 300);
@@ -80,7 +80,7 @@ export function ShopBrowser({
       return;
     }
     const controller = new AbortController();
-    const params = new URLSearchParams({ page: String(page), limit: "12" });
+    const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
     if (debouncedQuery.trim()) params.set("q", debouncedQuery.trim());
     if (category) params.set("category", category);
     if (subcategory) params.set("subcategory", subcategory);
@@ -95,13 +95,17 @@ export function ShopBrowser({
     clientFetch(`/api/catalog/search?${params}`, { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) return null;
-        return (await response.json()) as { products?: ProductCardData[]; total?: number; pages?: number };
+        return (await response.json()) as { products?: ProductCardData[]; total?: number };
       })
       .then((data) => {
         if (!data || controller.signal.aborted) return;
-        setProducts(data.products ?? []);
+        const next = data.products ?? [];
+        setProducts((current) => {
+          if (page <= 1) return next;
+          const seen = new Set(current.map((item) => item.id));
+          return [...current, ...next.filter((item) => !seen.has(item.id))];
+        });
         setCount(data.total ?? 0);
-        setPages(data.pages ?? 1);
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -277,7 +281,7 @@ export function ShopBrowser({
               </select>
             </label>
           </div>
-          {loading ? (
+          {loading && page === 1 ? (
             <SkeletonGrid />
           ) : (
             <ProductGrid
@@ -291,19 +295,14 @@ export function ShopBrowser({
               }
             />
           )}
-          {pages > 1 ? (
-            <div className="mt-8 flex items-center gap-4 text-[11px] uppercase tracking-[0.14em]">
-              <button type="button" disabled={page <= 1 || loading} className="disabled:opacity-40" onClick={() => setPage((current) => current - 1)}>
-                Previous
-              </button>
-              <span className="text-muted">
-                {page} / {pages}
-              </span>
-              <button type="button" disabled={page >= pages || loading} className="disabled:opacity-40" onClick={() => setPage((current) => current + 1)}>
-                Next
-              </button>
-            </div>
-          ) : null}
+          {loading && page === 1 ? null : (
+            <LoadMore
+              shown={products.length}
+              total={count}
+              loading={loading && page > 1}
+              onLoad={() => setPage((current) => current + 1)}
+            />
+          )}
         </div>
       </div>
     </div>

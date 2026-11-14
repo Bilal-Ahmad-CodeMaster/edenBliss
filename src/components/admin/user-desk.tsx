@@ -46,7 +46,7 @@ export function UserDesk({
 
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({ page: String(page), limit: "12", q: debounced });
+    const params = new URLSearchParams({ page: String(page), limit: "10", q: debounced });
     setLoading(true);
     clientFetch(`/api/admin/users?${params}`, { signal: controller.signal })
       .then(async (response) => {
@@ -228,7 +228,7 @@ export function UserDesk({
           </div>
         )}
       />
-      <Pager page={page} pages={pages} onPage={setPage} />
+      <Pager page={page} pages={pages} total={total} onPage={setPage} />
 
       <DeskDialog
         open={Boolean(resetId)}

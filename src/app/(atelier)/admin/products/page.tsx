@@ -19,7 +19,7 @@ export default async function AdminProductsPage({
 }) {
   const params = await searchParams;
   const [products, categories, sizes, settings] = await Promise.all([
-    listAdminProducts({ page: params.page, limit: 12 }),
+    listAdminProducts({ page: params.page, limit: 10 }),
     listCategoryOptions(),
     listAdminSizes(),
     getStoreSettings(),

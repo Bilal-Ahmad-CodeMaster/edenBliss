@@ -31,6 +31,7 @@ export function ProfileDesk({
   profile: CustomerProfile;
   orders: CustomerOrder[];
   currency: string;
+  whatsappNumber?: string;
   initialTab: "details" | "orders";
   orderPage: number;
   orderPages: number;
@@ -264,7 +265,7 @@ export function ProfileDesk({
         </div>
       ) : (
         <div className="mt-8">
-          <OrderHistory orders={orders} currency={currency} />
+          <OrderHistory orders={orders} currency={currency} whatsappNumber={whatsappNumber} />
           <PageNav
             page={orderPage}
             pages={orderPages}

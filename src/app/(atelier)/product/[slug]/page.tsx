@@ -6,7 +6,7 @@ import { ReviewsPanel } from "@/components/reviews-panel";
 import { readSession } from "@/lib/auth";
 import { getProductBySlug, getProductReviews, getRelatedProducts, getStoreSettings } from "@/lib/catalog";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ color?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -31,8 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductPage({ params }: Props) {
-  const { slug } = await params;
+export default async function ProductPage({ params, searchParams }: Props) {
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
   const product = await getProductBySlug(slug);
   if (!product) notFound();
   const [session, settings, reviews, related] = await Promise.all([

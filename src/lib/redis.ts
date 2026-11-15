@@ -42,7 +42,7 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
       const raw = await upstashCommand<string>(["GET", key]);
       if (typeof raw === "string") return JSON.parse(raw) as T;
     } catch (error) {
-      console.error("Redis read failed. Using the in-memory cache.", describe(error));
+      noteCacheFallback("read", error);
     }
   }
 
@@ -64,7 +64,7 @@ export async function cacheSet(key: string, value: unknown, seconds?: number) {
   try {
     await upstashCommand(["SET", key, raw, "EX", ttl]);
   } catch (error) {
-    console.error("Redis write failed. The in-memory cache still holds the value.", describe(error));
+    noteCacheFallback("write", error);
   }
 }
 
@@ -74,7 +74,7 @@ export async function cacheDel(keys: string[]) {
   try {
     await upstashCommand(["DEL", ...keys]);
   } catch (error) {
-    console.error("Redis delete failed.", describe(error));
+    noteCacheFallback("delete", error);
   }
 }
 

@@ -74,6 +74,7 @@ export type WishlistPiece = ProductCardData & {
 export type CustomerOrderItem = {
   title: string;
   image: string;
+  colorName?: string;
   sizeLabel: string;
   quantity: number;
   unitPrice: number;
@@ -111,6 +112,7 @@ export type ColorSwatch = {
   colorName: string;
   colorSlug: string;
   hexCode: string;
+  images?: string[];
 };
 
 export type ProductColor = ColorSwatch & {

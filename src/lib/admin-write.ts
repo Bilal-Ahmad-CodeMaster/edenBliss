@@ -319,6 +319,7 @@ export async function getAdminOrder(id: string) {
         sizeLabel: string;
         colorName?: string;
         hexCode?: string;
+        sizeMeasurementsMeters: GarmentMeasurements;
         discountApplied: number;
         lineTotal: number;
       }>;
@@ -355,11 +356,11 @@ export async function getAdminOrder(id: string) {
     grandTotal: order.grandTotal,
     items: order.items.map((item) => ({
       ...item,
+      colorName: item.colorName ?? "",
+      hexCode: item.hexCode ?? "",
       measurements: convertMeasurements(item.sizeMeasurementsMeters),
     })),
     statusHistory: (order.statusHistory ?? []).map((event) => ({
-      colorName: item.colorName ?? "",
-      hexCode: item.hexCode ?? "",
       status: event.status,
       note: event.note ?? "",
       updatedAt: event.updatedAt ? new Date(event.updatedAt).toISOString() : "",

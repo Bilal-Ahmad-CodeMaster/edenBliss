@@ -12,7 +12,15 @@ function stamp(value: string) {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value));
 }
 
-export function OrderHistory({ orders, currency }: { orders: CustomerOrder[]; currency: string }) {
+export function OrderHistory({
+  orders,
+  currency,
+  whatsappNumber = "",
+}: {
+  orders: CustomerOrder[];
+  currency: string;
+  whatsappNumber?: string;
+}) {
   if (!orders.length) {
     return (
       <p className="max-w-md text-sm leading-7 text-muted">
@@ -108,9 +116,21 @@ export function OrderHistory({ orders, currency }: { orders: CustomerOrder[]; cu
               {" · "}
               {order.shipping.address}, {order.shipping.city} {order.shipping.postalCode}
             </p>
-            <Link href={`/order-success/${order.orderNumber}`} className="mt-4 inline-block text-[11px] uppercase tracking-[0.16em] hover:text-sage">
-              View confirmation
-            </Link>
+            <div className="mt-4 flex flex-wrap gap-4">
+              <Link href={`/order-success/${order.orderNumber}`} className="text-[11px] uppercase tracking-[0.16em] hover:text-sage">
+                View confirmation
+              </Link>
+              {whatsappNumber ? (
+                <a
+                  href={whatsAppHref(whatsappNumber, orderWhatsAppText(order))}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] uppercase tracking-[0.16em] text-sage"
+                >
+                  Confirm order via WhatsApp
+                </a>
+              ) : null}
+            </div>
           </li>
         );
       })}

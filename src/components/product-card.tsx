@@ -31,7 +31,7 @@ export const ProductCard = memo(function ProductCard({
   const colors = product.colors ?? [];
   const [colorSlug, setColorSlug] = useState(colors[0]?.colorSlug ?? "");
   const color = colors.find((entry) => entry.colorSlug === colorSlug) ?? colors[0];
-  const image = color?.images[0] || product.image;
+  const image = color?.images?.[0] || product.image;
   const secondary = (color?.images ?? product.images).find((entry) => entry && entry !== image) ?? "";
   const href = color ? `/product/${product.slug}?color=${color.colorSlug}` : `/product/${product.slug}`;
   const offLabel = `−${Math.round(product.discountPercentage)}% OFF`;

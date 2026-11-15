@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ColorSwatches } from "@/components/color-swatches";
+import { openSizeFinder } from "@/components/size-finder-host";
 import { Button } from "@/components/ui/button";
 import { clientFetch } from "@/lib/client-fetch";
 import { RESTRICTED_MESSAGE } from "@/lib/constants";
@@ -13,10 +15,11 @@ import {
   MEASUREMENT_KEYS,
 } from "@/lib/measurements";
 import { formatMoney } from "@/lib/prices";
+import { stylistWhatsAppText, whatsAppHref } from "@/lib/whatsapp";
 import { useCartStore } from "@/store/cart-store";
 import { useSessionStore } from "@/store/session-store";
 import { useWishlistStore } from "@/store/wishlist-store";
-import type { CartItem, ProductDetail } from "@/types/commerce";
+import type { CartItem, ColorSwatch, ProductDetail } from "@/types/commerce";
 
 const labels: Record<(typeof MEASUREMENT_KEYS)[number], string> = {
   chest: "Chest",
@@ -30,10 +33,22 @@ export function PurchasePanel({
   product,
   currency,
   authenticated,
+  colorName,
+  colorSlug,
+  hexCode,
+  colors,
+  onColor,
+  whatsappNumber,
 }: {
   product: ProductDetail;
   currency: string;
   authenticated: boolean;
+  colorName: string;
+  colorSlug: string;
+  hexCode: string;
+  colors: ColorSwatch[];
+  onColor?: (slug: string) => void;
+  whatsappNumber: string;
 }) {
   const [sizeLabel, setSizeLabel] = useState(product.sizes.find((size) => size.stock > 0)?.sizeLabel ?? "");
   const [quantity, setQuantity] = useState(1);
@@ -42,19 +57,11 @@ export function PurchasePanel({
   const saved = useWishlistStore((state) => state.ids.includes(product.id));
   const selected = product.sizes.find((size) => size.sizeLabel === sizeLabel) ?? null;
   const onSale = product.discountPercentage > 0;
+  const stylistHref = whatsAppHref(
+    whatsappNumber,
+    stylistWhatsAppText({ title: product.title, colorName, sizeLabel: selected?.sizeLabel }),
+  );
 
-  async function saveWishlist() {
-    const signedIn = authenticated || Boolean(useSessionStore.getState().user);
-    if (!signedIn) {
-      redirectToLogin();
-      return;
-    }
-
-    const previous = useWishlistStore.getState().ids;
-    useWishlistStore.getState().toggle(product.id);
-    try {
-      const response = await clientFetch("/api/wishlist", {
-        method: "POST",
   useEffect(() => {
     setSizeLabel(product.sizes.find((size) => size.stock > 0)?.sizeLabel ?? "");
   }, [product.sizes, colorSlug]);
@@ -74,6 +81,18 @@ export function PurchasePanel({
     return () => window.removeEventListener("eden:select-size", onPick);
   }, [product.sizes]);
 
+  async function saveWishlist() {
+    const signedIn = authenticated || Boolean(useSessionStore.getState().user);
+    if (!signedIn) {
+      redirectToLogin();
+      return;
+    }
+
+    const previous = useWishlistStore.getState().ids;
+    useWishlistStore.getState().toggle(product.id);
+    try {
+      const response = await clientFetch("/api/wishlist", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId: product.id }),
       });
@@ -108,21 +127,6 @@ export function PurchasePanel({
       title: product.title,
       slug: product.slug,
       image: product.image,
-      sizeLabel: selected.sizeLabel,
-      sizeMeasurementsMeters: selected.measurementsInMeters,
-      quantity: Math.min(quantity, selected.stock),
-      unitPrice: product.finalPrice,
-      discountApplied: Math.max(0, product.basePrice - product.finalPrice),
-    };
-
-    const current = useCartStore.getState().items;
-    const existing = current.find(
-      (item) => item.productId === draft.productId && item.sizeLabel === draft.sizeLabel,
-    );
-    const next = existing
-      ? current.map((item) =>
-          item === existing
-            ? { ...item, quantity: Math.min(selected.stock, item.quantity + draft.quantity) }
       colorName,
       colorSlug,
       hexCode,
@@ -136,6 +140,21 @@ export function PurchasePanel({
     const current = useCartStore.getState().items;
     const existing = current.find(
       (item) => item.productId === draft.productId && item.sizeLabel === draft.sizeLabel && item.colorSlug === draft.colorSlug,
+    );
+    const next = existing
+      ? current.map((item) =>
+          item === existing
+            ? { ...item, quantity: Math.min(selected.stock, item.quantity + draft.quantity) }
+            : item,
+        )
+      : [...current, draft];
+
+    const previous = useCartStore.getState().items;
+    useCartStore.getState().replace(next);
+    const signedIn = authenticated || Boolean(useSessionStore.getState().user);
+    if (!signedIn) {
+      toast.success("Added to your bag.");
+      return;
     }
 
     setPending(true);
@@ -147,6 +166,7 @@ export function PurchasePanel({
           items: next.map((item) => ({
             productId: item.productId,
             sizeLabel: item.sizeLabel,
+            colorSlug: item.colorSlug,
             quantity: item.quantity,
           })),
         }),
@@ -162,7 +182,6 @@ export function PurchasePanel({
         useCartStore.getState().replace(previous);
         toast.error(data.message ?? "The bag could not be updated.");
         return;
-            colorSlug: item.colorSlug,
       }
       useCartStore.getState().replace(data.items);
       toast.success("Added to your bag.");
@@ -193,20 +212,6 @@ export function PurchasePanel({
       </div>
       <p className="mt-6 max-w-xl text-sm leading-7 text-muted">{product.storyDescription}</p>
 
-      <div className="mt-8">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Size</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {product.sizes.map((size) => {
-            const active = size.sizeLabel === sizeLabel;
-            return (
-              <button
-                key={size.sizeId}
-                type="button"
-                disabled={size.stock < 1}
-                onClick={() => setSizeLabel(size.sizeLabel)}
-                className={`h-11 min-w-11 border px-3 text-sm transition duration-300 disabled:cursor-not-allowed disabled:opacity-40 ${
-                  active ? "border-sage bg-sage text-alabaster" : "border-line hover:border-sage"
-                }`}
       {colors.length ? (
         <div className="mt-6">
           <p className="text-[11px] uppercase tracking-[0.18em] text-muted">{colorName || "Colour"}</p>
@@ -234,6 +239,21 @@ export function PurchasePanel({
             Find my size
           </button>
         </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {product.sizes.map((size) => {
+            const active = size.sizeLabel === sizeLabel;
+            return (
+              <button
+                key={size.sizeId}
+                type="button"
+                disabled={size.stock < 1}
+                onClick={() => setSizeLabel(size.sizeLabel)}
+                className={`h-11 min-w-11 border px-3 text-sm transition duration-300 disabled:cursor-not-allowed disabled:opacity-40 ${
+                  active ? "border-sage bg-sage text-alabaster" : "border-line hover:border-sage"
+                }`}
+              >
+                {size.sizeLabel}
+              </button>
             );
           })}
         </div>
@@ -305,6 +325,11 @@ export function PurchasePanel({
           {saved ? "Saved to favorites" : "Save to favorites"}
         </Button>
       </div>
+      {stylistHref ? (
+        <a href={stylistHref} target="_blank" rel="noreferrer" className="mt-4 inline-block text-[11px] uppercase tracking-[0.14em] text-sage">
+          Ask a stylist on WhatsApp
+        </a>
+      ) : null}
     </div>
   );
 }

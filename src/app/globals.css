@@ -158,6 +158,28 @@ canvas {
   background-color: #8e3a48;
 }
 
+.hero-fill {
+  background-color: #b54b5a;
+  color: #ffffff;
+}
+
+.hero-fill:hover {
+  background-color: #8e3a48;
+  color: #ffffff;
+}
+
+.hero-line {
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background-color: transparent;
+  color: #ffffff;
+}
+
+.hero-line:hover {
+  border-color: #ffffff;
+  background-color: #ffffff;
+  color: #111111;
+}
+
 @keyframes shimmer {
   0% {
     background-position: -400px 0;

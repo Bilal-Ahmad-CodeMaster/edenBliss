@@ -4,46 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { Button } from "@/components/ui/button";
 
-function MagneticLink({
-  href,
-  children,
-  variant = "default",
-  className,
-}: {
-  href: string;
-  children: string;
-  variant?: "default" | "outline";
-  className?: string;
-}) {
-  const reduce = useReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const x = useRef(0);
-  const y = useRef(0);
-
+function HeroLink({ href, children, tone }: { href: string; children: string; tone: "fill" | "line" }) {
   return (
-    <motion.div
-      ref={ref}
-      onMouseMove={(event) => {
-        if (reduce || !ref.current) return;
-        const rect = ref.current.getBoundingClientRect();
-        const nextX = (event.clientX - (rect.left + rect.width / 2)) * 0.28;
-        const nextY = (event.clientY - (rect.top + rect.height / 2)) * 0.28;
-        x.current = nextX;
-        y.current = nextY;
-        ref.current.style.transform = `translate3d(${nextX}px, ${nextY}px, 0)`;
-      }}
-      onMouseLeave={() => {
-        if (!ref.current) return;
-        ref.current.style.transform = "translate3d(0, 0, 0)";
-      }}
-      className="transition-transform duration-300"
+    <Link
+      href={href}
+      className={`inline-flex h-12 items-center justify-center px-8 text-sm uppercase tracking-[0.16em] transition duration-300 ${
+        tone === "fill" ? "hero-fill" : "hero-line"
+      }`}
     >
-      <Button asChild variant={variant} className={className}>
-        <Link href={href}>{children}</Link>
-      </Button>
-    </motion.div>
+      {children}
+    </Link>
   );
 }
 
@@ -58,7 +29,7 @@ export function Hero() {
     <section ref={ref} className="relative flex min-h-[calc(100svh-7.25rem)] items-end overflow-hidden bg-ink">
       <motion.div className="absolute inset-0" style={reduce ? undefined : { y, opacity: fade }}>
         <Image
-          src="/hero-clothes.jpg"
+          src="/hero-cloth.jpg"
           alt="An ivory linen dress, a sage coat, and an espresso jacket hanging in the atelier"
           fill
           priority
@@ -83,17 +54,15 @@ export function Hero() {
           A little world of elegance, comfort and beautiful fashion. Discover stylish outfits, graceful designs and seasonal collections with us.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <MagneticLink href="/shop">Explore Collection</MagneticLink>
-          <MagneticLink href="/lookbook" variant="outline" className="border-alabaster/80 text-alabaster hover:border-alabaster hover:text-alabaster">
+          <HeroLink href="/shop" tone="fill">
+            Explore Collection
+          </HeroLink>
+          <HeroLink href="/lookbook" tone="line">
             Lookbook
-          </MagneticLink>
-          <MagneticLink
-            href="/about"
-            variant="outline"
-            className="border-alabaster/80 text-alabaster hover:border-alabaster hover:text-alabaster"
-          >
+          </HeroLink>
+          <HeroLink href="/about" tone="line">
             The Brand Story
-          </MagneticLink>
+          </HeroLink>
         </div>
       </motion.div>
     </section>

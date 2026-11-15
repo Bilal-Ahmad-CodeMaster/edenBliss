@@ -8,14 +8,15 @@ function readCookie(name: string) {
   return match ? decodeURIComponent(match.slice(name.length + 1)) : "";
 }
 
-export function clientFetch(input: RequestInfo | URL, init: RequestInit = {}) {
+export function clientFetch(input: RequestInfo | URL, init: RequestInit & { timeoutMs?: number } = {}) {
   const headers = new Headers(init.headers);
   const method = (init.method ?? "GET").toUpperCase();
   if (method !== "GET" && method !== "HEAD" && !headers.has("x-csrf-token")) {
     const token = readCookie(CSRF_COOKIE);
     if (token) headers.set("x-csrf-token", token);
   }
-  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
-  const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
-  return fetch(input, { ...init, headers, signal });
+  const { timeoutMs, ...rest } = init;
+  const timeout = AbortSignal.timeout(timeoutMs ?? REQUEST_TIMEOUT_MS);
+  const signal = rest.signal ? AbortSignal.any([rest.signal, timeout]) : timeout;
+  return fetch(input, { ...rest, headers, signal });
 }

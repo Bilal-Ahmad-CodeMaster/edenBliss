@@ -1,6 +1,8 @@
 import "server-only";
+import { resolve4 } from "node:dns";
 import nodemailer from "nodemailer";
 import { connectDB } from "@/lib/db";
+import { usePublicDnsWhenLoopback } from "@/lib/mongo-dns";
 import { formatMoney } from "@/lib/prices";
 import { stripHtml } from "@/lib/sanitize";
 import { Order } from "@/models/Order";
@@ -8,6 +10,15 @@ import { StoreSettings } from "@/models/StoreSettings";
 
 function oneLine(value: string) {
   return value.replace(/[\r\n]+/g, " ").trim();
+}
+
+function resolveMailHost(hostname: string) {
+  usePublicDnsWhenLoopback();
+  return new Promise<string>((resolve) => {
+    resolve4(hostname, (error, addresses) => {
+      resolve(!error && addresses[0] ? addresses[0] : hostname);
+    });
+  });
 }
 
 function smtpConfig() {
@@ -44,12 +55,14 @@ export async function sendAdminMail(input: { subject: string; text: string; repl
   const to = await getAdminInbox();
   if (!config || !to) return false;
 
-  const timeout = Number(process.env.EXTERNAL_API_TIMEOUT_MS) || 5000;
+  const timeout = Math.max(Number(process.env.EXTERNAL_API_TIMEOUT_MS) || 5000, 12000);
+  const host = await resolveMailHost(config.host);
   const transporter = nodemailer.createTransport({
-    host: config.host,
+    host,
     port: config.port,
     secure: config.secure,
     auth: { user: config.user, pass: config.pass },
+    tls: { servername: config.host },
     connectionTimeout: timeout,
     greetingTimeout: timeout,
     socketTimeout: timeout,

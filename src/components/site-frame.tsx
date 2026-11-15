@@ -29,6 +29,7 @@ export async function SiteFrame({
       />
       <main className="min-w-0 overflow-x-hidden">{children}</main>
       <SiteFooter settings={settings} categories={categories} />
+      <SizeFinderHost whatsappNumber={settings.whatsappNumber} />
     </div>
   );
 }

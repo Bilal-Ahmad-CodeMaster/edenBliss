@@ -19,6 +19,7 @@ export function ContactForm() {
     try {
       const response = await clientFetch("/api/contact", {
         method: "POST",
+        timeoutMs: 15000,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.get("name"),

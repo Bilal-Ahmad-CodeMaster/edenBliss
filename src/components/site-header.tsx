@@ -10,7 +10,6 @@ import { SearchOverlay } from "@/components/search-overlay";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useSessionStore } from "@/store/session-store";
 import { useWishlistCount } from "@/store/wishlist-store";
-import { openSizeFinder } from "@/components/size-finder-host";
 import { loginHref } from "@/lib/login-redirect";
 import { telHref } from "@/lib/utils";
 import type { NavCategory, PublicUser, StoreSettingsDTO } from "@/types/commerce";
@@ -64,9 +63,9 @@ export function SiteHeader({
           <Link href="/lookbook" className="nav-link text-[11px] uppercase tracking-[0.2em]">
             Lookbook
           </Link>
-          <button type="button" className="nav-link text-[11px] uppercase tracking-[0.2em]" onClick={() => openSizeFinder()}>
+          <Link href="/find-my-size" className="nav-link text-[11px] uppercase tracking-[0.2em]">
             Find my size
-          </button>
+          </Link>
           {categories.map((category) => (
             <div
               key={category.slug}
@@ -194,16 +193,9 @@ export function SiteHeader({
                   <Link href="/lookbook" onClick={() => setMenuOpen(false)} className="py-2 font-serif text-3xl">
                     Lookbook
                   </Link>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      openSizeFinder();
-                    }}
-                    className="py-2 text-left font-serif text-3xl"
-                  >
+                  <Link href="/find-my-size" onClick={() => setMenuOpen(false)} className="py-2 font-serif text-3xl">
                     Find my size
-                  </button>
+                  </Link>
                   {categories.map((category) => {
                     const isOpen = expanded === category.slug;
                     return (

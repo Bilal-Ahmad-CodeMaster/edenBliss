@@ -23,6 +23,7 @@ export function SizeFinderModal({
   colorName,
   whatsappNumber,
   onSelect,
+  embedded = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -31,6 +32,7 @@ export function SizeFinderModal({
   colorName?: string;
   whatsappNumber?: string;
   onSelect?: (sizeLabel: string, waistMeters: number) => void;
+  embedded?: boolean;
 }) {
   const reduce = useReducedMotion();
   const [system, setSystem] = useState<"metric" | "imperial">("metric");
@@ -82,8 +84,7 @@ export function SizeFinderModal({
     stylistWhatsAppText({ title: productTitle || "a piece", colorName, sizeLabel: result?.sizeLabel }),
   );
 
-  return (
-    <DeskDialog open={open} onOpenChange={(next) => !next && onClose()} title="Find my size" description="Measured against the house size book.">
+  const form = (
       <div className="space-y-5">
         <div className="flex gap-2">
           {(
@@ -177,6 +178,13 @@ export function SizeFinderModal({
           </a>
         ) : null}
       </div>
+  );
+
+  if (embedded) return form;
+
+  return (
+    <DeskDialog open={open} onOpenChange={(next) => !next && onClose()} title="Find my size" description="Measured against the house size book.">
+      {form}
     </DeskDialog>
   );
 }

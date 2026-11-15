@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { FindMySizeButton } from "@/components/size-finder-host";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { telHref } from "@/lib/utils";
 import type { NavCategory, StoreSettingsDTO } from "@/types/commerce";
@@ -51,7 +50,9 @@ export function SiteFooter({
               </Link>
             </li>
             <li>
-              <FindMySizeButton className="nav-link">Find my size</FindMySizeButton>
+              <Link href="/find-my-size" className="nav-link">
+                Find my size
+              </Link>
             </li>
             <li>
               <Link href="/contact" className="nav-link">

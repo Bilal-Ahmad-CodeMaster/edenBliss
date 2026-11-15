@@ -18,6 +18,27 @@ function allowedOrigins() {
     .filter(Boolean);
 }
 
+function hostOf(value: string) {
+  try {
+    const url = new URL(value.includes("://") ? value : `https://${value}`);
+    return url.host.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function originAllowed(request: NextRequest, origin: string | null) {
+  if (!origin) return true;
+  const originHost = hostOf(origin);
+  if (!originHost) return false;
+  const siteHosts = [request.nextUrl.host, request.headers.get("host") ?? "", request.headers.get("x-forwarded-host") ?? ""]
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+  if (siteHosts.includes(originHost)) return true;
+  return allowedOrigins().some((allowed) => hostOf(allowed) === originHost);
+}
+
 function finish(response: NextResponse, csrf: string) {
   applySecurityHeaders(response.headers);
   response.cookies.set(CSRF_COOKIE, csrf, {
@@ -52,7 +73,7 @@ export async function middleware(request: NextRequest) {
   const fetchSite = request.headers.get("sec-fetch-site");
 
   if (mutating) {
-    if (origin && !allowedOrigins().includes(origin)) {
+    if (!originAllowed(request, origin)) {
       return finish(NextResponse.json({ message: "This origin is not allowed." }, { status: 403 }), csrf);
     }
     if (fetchSite === "cross-site") {
@@ -62,7 +83,7 @@ export async function middleware(request: NextRequest) {
 
   if (request.method === "OPTIONS") {
     const response = new NextResponse(null, { status: 204 });
-    if (origin && allowedOrigins().includes(origin)) {
+    if (originAllowed(request, origin) && origin) {
       response.headers.set("Access-Control-Allow-Origin", origin);
       response.headers.set("Access-Control-Allow-Credentials", "true");
       response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
@@ -72,7 +93,7 @@ export async function middleware(request: NextRequest) {
     return finish(response, csrf);
   }
 
-  if (origin && allowedOrigins().includes(origin)) {
+  if (originAllowed(request, origin) && origin) {
     requestHeaders.set("x-allowed-origin", origin);
   }
 
@@ -125,7 +146,7 @@ export async function middleware(request: NextRequest) {
   if (!token) {
     if (!needsSession) {
       const response = NextResponse.next({ request: { headers: requestHeaders } });
-      return withCors(response, origin, csrf);
+      return withCors(request, response, origin, csrf);
     }
     if (pathname.startsWith("/api/")) {
       return finish(NextResponse.json({ message: "Sign in to continue." }, { status: 401 }), csrf);
@@ -139,7 +160,7 @@ export async function middleware(request: NextRequest) {
   try {
     await verifySession(token);
     const response = NextResponse.next({ request: { headers: requestHeaders } });
-    return withCors(response, origin, csrf);
+    return withCors(request, response, origin, csrf);
   } catch {
     if (pathname.startsWith("/api/")) {
       const response = NextResponse.json({ message: "Your session has expired. Sign in again." }, { status: 401 });
@@ -154,8 +175,8 @@ export async function middleware(request: NextRequest) {
   }
 }
 
-function withCors(response: NextResponse, origin: string | null, csrf: string) {
-  if (origin && allowedOrigins().includes(origin)) {
+function withCors(request: NextRequest, response: NextResponse, origin: string | null, csrf: string) {
+  if (originAllowed(request, origin) && origin) {
     response.headers.set("Access-Control-Allow-Origin", origin);
     response.headers.set("Access-Control-Allow-Credentials", "true");
     response.headers.set("Vary", "Origin");

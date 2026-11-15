@@ -6,12 +6,13 @@ import { readSession } from "@/lib/auth";
 import { getCatalogFacets, getNavCategories, getShopProducts, getStoreSettings } from "@/lib/catalog";
 
 export const metadata: Metadata = {
-  title: "Cloth, cut slowly",
+  title: "Elegance in every thread",
   description:
-    "Eden Bliss opens with linen columns, wool coats, and cashmere overshirts. A luxury clothing house with measured sizes and cash on delivery.",
+    "Welcome to Eden Bliss. A little world of elegance, comfort and beautiful fashion. Discover stylish outfits, graceful designs and seasonal collections.",
   openGraph: {
-    title: "Eden Bliss · Cloth, cut slowly",
-    description: "Linen, wool, and silk cut in small lots. Measured sizes. Cash on delivery.",
+    title: "Eden Bliss · Elegance in every thread",
+    description:
+      "A little world of elegance, comfort and beautiful fashion. Discover stylish outfits, graceful designs and seasonal collections.",
   },
 };
 

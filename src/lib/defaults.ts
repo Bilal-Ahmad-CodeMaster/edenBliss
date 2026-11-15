@@ -2,8 +2,8 @@ import type { StoreSettingsDTO } from "@/types/commerce";
 
 export const defaultStoreSettings: StoreSettingsDTO = {
   storeName: "Eden Bliss",
-  supportEmail: "atelier@edenbliss.com",
-  supportPhone: "+1 (212) 555-0148",
+  supportEmail: "edenbliss.official@gmail.com",
+  supportPhone: "+923161667298",
   currencySymbol: "Rs.",
   standardShippingRate: 450,
   freeShippingThreshold: 15000,

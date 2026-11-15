@@ -10,6 +10,18 @@ const productSizeSchema = new Schema(
   { _id: false },
 );
 
+const colorVariantSchema = new Schema(
+  {
+    colorName: { type: String, required: true, trim: true, maxlength: 40 },
+    colorSlug: { type: String, required: true, trim: true, lowercase: true, maxlength: 40 },
+    hexCode: { type: String, required: true, trim: true, match: /^#[0-9A-Fa-f]{6}$/ },
+    images: { type: [String], default: [] },
+    outfitLookImages: { type: [String], default: [] },
+    sizes: { type: [productSizeSchema], default: [] },
+  },
+  { _id: false },
+);
+
 const productSchema = new Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 140 },
@@ -30,6 +42,7 @@ const productSchema = new Schema(
     category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     subCategory: { type: Schema.Types.ObjectId, ref: "Category", default: null },
     sizes: { type: [productSizeSchema], default: [] },
+    colorVariants: { type: [colorVariantSchema], default: [] },
     basePrice: { type: Number, required: true, min: 0 },
     discountPercentage: { type: Number, required: true, min: 0, max: 90, default: 0 },
     discountAmount: { type: Number, required: true, min: 0, default: 0 },

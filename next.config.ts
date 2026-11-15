@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
-  serverExternalPackages: ["mongoose", "nodemailer"],
+  serverExternalPackages: ["mongoose", "nodemailer", "cloudinary"],
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion"],
   },

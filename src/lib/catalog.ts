@@ -39,6 +39,14 @@ type ProductLean = {
   fabricAndCare?: string;
   images: string[];
   outfitLookImages?: string[];
+  colorVariants?: Array<{
+    colorName: string;
+    colorSlug: string;
+    hexCode: string;
+    images: string[];
+    outfitLookImages?: string[];
+    sizes?: { sizeId: SizeLean | Types.ObjectId; sizeLabel: string; stock: number }[];
+  }>;
   category?: RefLean | Types.ObjectId | null;
   subCategory?: RefLean | Types.ObjectId | null;
   sizes?: { sizeId: SizeLean | Types.ObjectId; sizeLabel: string; stock: number }[];
@@ -113,7 +121,7 @@ export const getStoreSettings = cache(async (): Promise<StoreSettingsDTO> => {
     traceSpan("db.settings", async () => {
       const settings = await StoreSettings.findOne()
         .select(
-          "storeName supportEmail supportPhone currencySymbol standardShippingRate freeShippingThreshold taxPercentage announcementBarText themeMode",
+          "storeName supportEmail supportPhone whatsappNumber currencySymbol standardShippingRate freeShippingThreshold taxPercentage announcementBarText themeMode",
         )
         .lean<StoreSettingsDTO | null>();
       if (!settings || Array.isArray(settings)) return defaultStoreSettings;
@@ -121,6 +129,7 @@ export const getStoreSettings = cache(async (): Promise<StoreSettingsDTO> => {
         storeName: settings.storeName,
         supportEmail: settings.supportEmail,
         supportPhone: settings.supportPhone,
+        whatsappNumber: settings.whatsappNumber || process.env.DEFAULT_WHATSAPP_NUMBER || settings.supportPhone,
         currencySymbol: settings.currencySymbol,
         standardShippingRate: settings.standardShippingRate,
         freeShippingThreshold: settings.freeShippingThreshold,
@@ -358,57 +367,86 @@ export async function getRelatedProducts(categorySlug: string, excludeId: string
   );
 }
 
+function mapSizeRows(
+  rows: { sizeId: SizeLean | Types.ObjectId; sizeLabel: string; stock: number }[] | undefined,
+): ProductSizeOption[] {
+  return (rows ?? [])
+    .map((row) => {
+      if (!isSize(row.sizeId)) return null;
+      const converted = convertMeasurements(row.sizeId.measurementsInMeters);
+      return {
+        sizeId: String(row.sizeId._id),
+        sizeLabel: row.sizeLabel,
+        stock: row.stock,
+        measurementsInMeters: converted.meters,
+        measurementsInCm: converted.centimeters,
+        measurementsInInches: converted.inches,
+        sortOrder: row.sizeId.sortOrder,
+      };
+    })
+    .filter((size): size is ProductSizeOption & { sortOrder: number } => Boolean(size))
+    .sort((left, right) => left.sortOrder - right.sortOrder)
+    .map(({ sortOrder: _sort, ...size }) => size);
+}
+
 export const getProductBySlug = cache(async (slug: string): Promise<ProductDetail | null> => {
   if (!(await ready())) return null;
   return remember(`product:${slug}`, () =>
     traceSpan("db.product", async () => {
       const product = await Product.findOne({ slug, isActive: true })
         .select(
-          "title slug storyDescription fabricAndCare images outfitLookImages category subCategory sizes basePrice discountPercentage finalPrice averageRating reviewCount",
+          "title slug storyDescription fabricAndCare images outfitLookImages colorVariants category subCategory sizes basePrice discountPercentage finalPrice averageRating reviewCount",
         )
         .populate({ path: "category", select: "name slug" })
         .populate({ path: "subCategory", select: "name slug" })
         .populate({ path: "sizes.sizeId", select: "label sortOrder measurementsInMeters" })
+        .populate({ path: "colorVariants.sizes.sizeId", select: "label sortOrder measurementsInMeters" })
         .lean<ProductLean | null>();
 
       if (!product) return null;
 
-      const sizes: ProductSizeOption[] = (product.sizes ?? [])
-        .map((row) => {
-          if (!isSize(row.sizeId)) return null;
-          const converted = convertMeasurements(row.sizeId.measurementsInMeters);
-          return {
-            sizeId: String(row.sizeId._id),
-            sizeLabel: row.sizeLabel,
-            stock: row.stock,
-            measurementsInMeters: converted.meters,
-            measurementsInCm: converted.centimeters,
-            measurementsInInches: converted.inches,
-            sortOrder: row.sizeId.sortOrder,
-          };
-        })
-        .filter((size): size is ProductSizeOption & { sortOrder: number } => Boolean(size))
-        .sort((left, right) => left.sortOrder - right.sortOrder)
-        .map(({ sortOrder: _sort, ...size }) => size);
-
+      const sizes = mapSizeRows(product.sizes);
       const card = toCard(product);
       const subCategory = asRef(product.subCategory);
+      const detailed = (product.colorVariants ?? [])
+        .map((variant) => ({
+          colorName: variant.colorName,
+          colorSlug: variant.colorSlug,
+          hexCode: variant.hexCode,
+          images: variant.images ?? [],
+          outfitLookImages: variant.outfitLookImages ?? [],
+          sizes: mapSizeRows(variant.sizes),
+        }))
+        .filter((variant) => variant.images.length && variant.sizes.length);
+      const colorsDetailed = detailed.length
+        ? detailed
+        : [
+            {
+              colorName: "House cloth",
+              colorSlug: "house",
+              hexCode: "#E6E1DA",
+              images: product.images ?? [],
+              outfitLookImages: product.outfitLookImages ?? [],
+              sizes,
+            },
+          ];
       return {
         ...card,
         fabricAndCare: product.fabricAndCare ?? "",
-        outfitLookImages: product.outfitLookImages ?? [],
+        outfitLookImages: colorsDetailed[0]?.outfitLookImages ?? [],
         subCategoryName: subCategory?.name ?? "",
         subCategorySlug: subCategory?.slug ?? "",
-        sizes,
+        sizes: colorsDetailed[0]?.sizes ?? sizes,
         averageRating: product.averageRating ?? 0,
         reviewCount: product.reviewCount ?? 0,
+        colorsDetailed,
       };
     }),
   );
 });
 
 export async function getProductsByIds(ids: string[]) {
-  const valid = ids.filter((id) => isObjectId(id)).slice(0, 100);
+  const valid = ids.filter((id) => isObjectId(id)).slice(0, 12);
   if (!valid.length || !(await ready())) return [];
 
   return traceSpan("db.productsById", async () => {

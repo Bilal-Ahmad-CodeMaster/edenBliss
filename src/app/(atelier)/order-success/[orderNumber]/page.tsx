@@ -48,7 +48,7 @@ export default async function OrderSuccessPage({ params }: PageProps) {
         </Link>
       </div>
       <div className="mt-12">
-        <OrderHistory orders={[order]} currency={settings.currencySymbol} />
+        <OrderHistory orders={[order]} currency={settings.currencySymbol} whatsappNumber={settings.whatsappNumber} />
       </div>
     </section>
   );

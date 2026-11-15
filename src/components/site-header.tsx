@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Heart, Menu, UserRound } from "lucide-react";
@@ -9,6 +10,7 @@ import { SearchOverlay } from "@/components/search-overlay";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useSessionStore } from "@/store/session-store";
 import { useWishlistCount } from "@/store/wishlist-store";
+import { openSizeFinder } from "@/components/size-finder-host";
 import { loginHref } from "@/lib/login-redirect";
 import { telHref } from "@/lib/utils";
 import type { NavCategory, PublicUser, StoreSettingsDTO } from "@/types/commerce";
@@ -44,14 +46,27 @@ export function SiteHeader({
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-page items-center justify-between gap-4 px-4 sm:h-20 sm:px-6 lg:px-10">
-        <Link href="/" className="font-serif text-[1.7rem] leading-none tracking-tight text-foreground sm:text-3xl">
-          Eden Bliss
+        <Link href="/" aria-label="Eden Bliss" className="flex min-w-0 shrink items-center">
+          <Image
+            src="/logo-horizontal.png"
+            alt="Eden Bliss"
+            width={400}
+            height={100}
+            priority
+            className="h-9 w-auto max-w-[46vw] object-contain sm:h-10 sm:max-w-none md:h-12"
+          />
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Primary">
           <Link href="/shop" className="nav-link text-[11px] uppercase tracking-[0.2em]">
             Shop
           </Link>
+          <Link href="/lookbook" className="nav-link text-[11px] uppercase tracking-[0.2em]">
+            Lookbook
+          </Link>
+          <button type="button" className="nav-link text-[11px] uppercase tracking-[0.2em]" onClick={() => openSizeFinder()}>
+            Find my size
+          </button>
           {categories.map((category) => (
             <div
               key={category.slug}
@@ -162,12 +177,33 @@ export function SiteHeader({
             </SheetTrigger>
             <SheetContent>
               <div className="flex h-full flex-col overflow-y-auto px-6 pb-10 pt-16" data-lenis-prevent>
-                <SheetTitle>Eden Bliss</SheetTitle>
+                <SheetTitle>
+                  <Image
+                    src="/logo-horizontal.png"
+                    alt="Eden Bliss"
+                    width={400}
+                    height={100}
+                    className="h-12 w-auto object-contain"
+                  />
+                </SheetTitle>
                 <SheetDescription className="mt-2">The house, the shop, and your fitting room.</SheetDescription>
                 <nav className="mt-10 flex flex-col gap-2" aria-label="Mobile">
                   <Link href="/shop" onClick={() => setMenuOpen(false)} className="py-2 font-serif text-3xl">
                     Shop
                   </Link>
+                  <Link href="/lookbook" onClick={() => setMenuOpen(false)} className="py-2 font-serif text-3xl">
+                    Lookbook
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      openSizeFinder();
+                    }}
+                    className="py-2 text-left font-serif text-3xl"
+                  >
+                    Find my size
+                  </button>
                   {categories.map((category) => {
                     const isOpen = expanded === category.slug;
                     return (

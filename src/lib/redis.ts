@@ -22,8 +22,13 @@ function pruneMemory() {
   }
 }
 
-function describe(error: unknown) {
-  return error instanceof Error ? error.message : "Unknown cache error";
+const reported = new Set<string>();
+
+function noteCacheFallback(kind: string, error: unknown) {
+  if (reported.has(kind)) return;
+  reported.add(kind);
+  const message = error instanceof Error ? error.message : "Unknown cache error";
+  console.warn(`Redis ${kind} failed. Using the in-memory cache.`, message);
 }
 
 function remember(key: string, raw: string, seconds: number) {

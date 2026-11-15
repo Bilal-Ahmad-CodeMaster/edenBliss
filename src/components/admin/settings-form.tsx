@@ -23,6 +23,7 @@ export function SettingsForm({ settings, adminEmail }: { settings: StoreSettings
           supportEmail: formData.get("supportEmail"),
           adminEmail: formData.get("adminEmail"),
           supportPhone: formData.get("supportPhone"),
+          whatsappNumber: formData.get("whatsappNumber"),
           currencySymbol: formData.get("currencySymbol"),
           standardShippingRate: formData.get("standardShippingRate"),
           freeShippingThreshold: formData.get("freeShippingThreshold"),

@@ -22,6 +22,7 @@ export function ProfileDesk({
   profile,
   orders,
   currency,
+  whatsappNumber = "",
   initialTab,
   orderPage,
   orderPages,

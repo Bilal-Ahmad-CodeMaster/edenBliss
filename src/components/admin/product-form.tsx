@@ -20,11 +20,27 @@ type Option = { id: string; name: string; parentId: string };
 type SizeOption = { id: string; label: string };
 type SizeStock = { sizeId: string; stock: number };
 
+type DraftColor = {
+  colorName: string;
+  hexCode: string;
+  images: string[];
+  outfitLookImages: string[];
+  stocks: Record<string, string>;
+};
+
 export type ProductEditor = ProductFormValues & {
   id?: string;
   images: string[];
   outfitLookImages: string[];
   sizes: SizeStock[];
+  colorVariants?: Array<{
+    colorName: string;
+    colorSlug: string;
+    hexCode: string;
+    images: string[];
+    outfitLookImages: string[];
+    sizes: SizeStock[];
+  }>;
 };
 
 export function ProductForm({
@@ -44,6 +60,15 @@ export function ProductForm({
   const slugTouched = useRef(Boolean(product));
   const [images, setImages] = useState(product?.images ?? []);
   const [outfitLookImages, setOutfitLookImages] = useState(product?.outfitLookImages ?? []);
+  const [colors, setColors] = useState<DraftColor[]>(
+    (product?.colorVariants ?? []).map((variant) => ({
+      colorName: variant.colorName,
+      hexCode: variant.hexCode,
+      images: variant.images,
+      outfitLookImages: variant.outfitLookImages,
+      stocks: Object.fromEntries(variant.sizes.map((size) => [size.sizeId, String(size.stock)])),
+    })),
+  );
   const [stocks, setStocks] = useState<Record<string, string>>(() =>
     Object.fromEntries((product?.sizes ?? []).map((size) => [size.sizeId, String(size.stock)])),
   );
@@ -90,11 +115,24 @@ export function ProductForm({
 
   async function onSubmit(values: ProductFormValues) {
     if (pending) return;
-    if (!images.length) {
+    const preparedColors = colors
+      .filter((color) => color.colorName.trim())
+      .map((color) => ({
+        colorName: color.colorName.trim(),
+        colorSlug: slugify(color.colorName),
+        hexCode: color.hexCode,
+        images: color.images,
+        outfitLookImages: color.outfitLookImages,
+        sizes: sizes
+          .filter((size) => color.stocks[size.id] !== undefined && color.stocks[size.id] !== "")
+          .map((size) => ({ sizeId: size.id, stock: Math.max(0, Number(color.stocks[size.id]) || 0) })),
+      }))
+      .filter((color) => color.images.length && color.sizes.length);
+    if (!images.length && !preparedColors.length) {
       setMessage("Add at least one gallery image.");
       return;
     }
-    if (!chosenSizes.length) {
+    if (!chosenSizes.length && !preparedColors.length) {
       setMessage("Choose at least one size and a stock count.");
       return;
     }
@@ -109,9 +147,10 @@ export function ProductForm({
           subCategoryId: values.subCategoryId || null,
           discountPercentage: values.discountMode === "percent" ? values.discountPercentage : 0,
           discountAmount: values.discountMode === "flat" ? values.discountAmount : 0,
-          images,
-          outfitLookImages,
-          sizes: chosenSizes.map((size) => ({ sizeId: size.id, stock: Math.max(0, Number(stocks[size.id]) || 0) })),
+          images: preparedColors[0]?.images ?? images,
+          outfitLookImages: preparedColors[0]?.outfitLookImages ?? outfitLookImages,
+          colorVariants: preparedColors,
+          sizes: (preparedColors[0]?.sizes ?? chosenSizes.map((size) => ({ sizeId: size.id, stock: Math.max(0, Number(stocks[size.id]) || 0) }))),
         }),
       });
       const data = (await response.json()) as { message?: string };
@@ -172,7 +211,100 @@ export function ProductForm({
         ) : null}
       </div>
       <ImageManager label="Gallery" images={images} onChange={setImages} />
-      <ImageManager label="Outfit looks" images={outfitLookImages} onChange={setOutfitLookImages} />
+      <ImageManager label="Outfit looks" images={outfitLookImages} onChange={setOutfitLookImages} purpose="outfit" />
+      <section className="space-y-4 border border-line p-4">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-muted">Colour variants</p>
+          <button
+            type="button"
+            className="text-[11px] uppercase tracking-[0.14em] text-sage"
+            onClick={() =>
+              setColors((current) => [
+                ...current,
+                { colorName: "", hexCode: "#B54B5A", images: [], outfitLookImages: [], stocks: {} },
+              ])
+            }
+          >
+            Add colour
+          </button>
+        </div>
+        {colors.map((color, index) => (
+          <div key={`${color.hexCode}-${index}`} className="space-y-3 border border-line p-3">
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+              <Input
+                value={color.colorName}
+                placeholder="Linen white"
+                aria-label="Colour name"
+                onChange={(event) =>
+                  setColors((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, colorName: event.target.value } : item)))
+                }
+              />
+              <input
+                type="color"
+                aria-label="Colour"
+                value={color.hexCode}
+                onChange={(event) =>
+                  setColors((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, hexCode: event.target.value.toUpperCase() } : item)))
+                }
+                className="h-11 w-16 border border-line bg-background"
+              />
+            </div>
+            <ImageManager
+              label={`${color.colorName || "Colour"} gallery`}
+              images={color.images}
+              purpose="product"
+              onChange={(next) => setColors((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, images: next } : item)))}
+            />
+            <ImageManager
+              label="Outfit looks"
+              images={color.outfitLookImages}
+              purpose="outfit"
+              onChange={(next) => setColors((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, outfitLookImages: next } : item)))}
+            />
+            <div className="flex flex-wrap gap-2">
+              {sizes.map((size) => {
+                const chosen = color.stocks[size.id] !== undefined && color.stocks[size.id] !== "";
+                return (
+                  <label key={size.id} className="flex items-center gap-2 border border-line px-2 py-1 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={chosen}
+                      onChange={(event) =>
+                        setColors((current) =>
+                          current.map((item, itemIndex) =>
+                            itemIndex === index
+                              ? { ...item, stocks: { ...item.stocks, [size.id]: event.target.checked ? item.stocks[size.id] || "0" : "" } }
+                              : item,
+                          ),
+                        )
+                      }
+                    />
+                    {size.label}
+                    {chosen ? (
+                      <input
+                        value={color.stocks[size.id] ?? "0"}
+                        inputMode="numeric"
+                        aria-label={`${size.label} stock`}
+                        onChange={(event) =>
+                          setColors((current) =>
+                            current.map((item, itemIndex) =>
+                              itemIndex === index ? { ...item, stocks: { ...item.stocks, [size.id]: event.target.value } } : item,
+                            ),
+                          )
+                        }
+                        className="h-8 w-16 border border-line bg-background px-2"
+                      />
+                    ) : null}
+                  </label>
+                );
+              })}
+            </div>
+            <button type="button" className="text-[11px] uppercase tracking-[0.14em] text-terracotta" onClick={() => setColors((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
+              Remove colour
+            </button>
+          </div>
+        ))}
+      </section>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="category">Category</Label>

@@ -45,11 +45,15 @@ function toBlob(canvas: HTMLCanvasElement, type: string, quality: number) {
   return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
 }
 
-export async function uploadPreparedImage(file: File) {
+export async function uploadPreparedImage(
+  file: File,
+  purpose: "product" | "outfit" | "category" | "lookbook" = "product",
+) {
   const prepared = await compressImageFile(file);
   const body = new FormData();
   body.set("file", prepared);
-  const response = await clientFetch("/api/admin/uploads", { method: "POST", body });
+  body.set("purpose", purpose);
+  const response = await clientFetch("/api/upload", { method: "POST", body });
   const data = (await response.json()) as { url?: string; message?: string };
   if (!response.ok || !data.url) throw new Error(data.message ?? "The image could not be saved.");
   return data.url;

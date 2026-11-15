@@ -7,6 +7,7 @@ const storeSettingsSchema = new Schema(
     supportEmail: { type: String, required: true, trim: true, lowercase: true },
     adminEmail: { type: String, trim: true, lowercase: true, default: "" },
     supportPhone: { type: String, required: true, trim: true },
+    whatsappNumber: { type: String, trim: true, default: "" },
     currencySymbol: { type: String, required: true, trim: true, default: "Rs." },
     standardShippingRate: { type: Number, required: true, min: 0, default: 450 },
     freeShippingThreshold: { type: Number, required: true, min: 0, default: 15000 },

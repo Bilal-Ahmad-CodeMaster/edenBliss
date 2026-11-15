@@ -227,6 +227,7 @@ export function CategoryDesk({ initial }: { initial: CategoryRow[] }) {
           label="Cover"
           max={1}
           images={form.imageUrl ? [form.imageUrl] : []}
+          purpose="category"
           onChange={(images) => setForm((current) => ({ ...current, imageUrl: images[0] ?? "" }))}
         />
         <label className="flex items-center gap-3 text-sm">

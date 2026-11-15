@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EditorialImage } from "@/components/editorial-image";
 import { formatMoney } from "@/lib/prices";
+import { orderWhatsAppText, whatsAppHref } from "@/lib/whatsapp";
 import { telHref } from "@/lib/utils";
 import type { CustomerOrder } from "@/types/commerce";
 

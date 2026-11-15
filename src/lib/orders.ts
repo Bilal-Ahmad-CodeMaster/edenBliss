@@ -71,6 +71,9 @@ export async function placeCodOrder(userId: string, shipping: ShippingInput, not
     title: line.title,
     image: line.image,
     sizeLabel: line.sizeLabel,
+    colorName: line.colorName,
+    colorSlug: line.colorSlug,
+    hexCode: line.hexCode,
     sizeMeasurementsMeters: line.sizeMeasurementsMeters,
     quantity: line.quantity,
     unitPrice: line.unitPrice,
@@ -95,17 +98,42 @@ export async function placeCodOrder(userId: string, shipping: ShippingInput, not
 
   async function write(session?: mongoose.ClientSession) {
     const options = session ? { session } : undefined;
+    const leadQuery = Product.find({ _id: { $in: lines.map((line) => line.productId) } }).select("colorVariants.colorSlug");
+    if (session) leadQuery.session(session);
+    const leads = await leadQuery.lean<Array<{ _id: { toString(): string }; colorVariants?: { colorSlug: string }[] }>>();
+    const leadColor = new Map(leads.map((product) => [String(product._id), product.colorVariants?.[0]?.colorSlug ?? ""]));
     const stock = await Product.bulkWrite(
-      lines.map((line) => ({
-        updateOne: {
-          filter: {
-            _id: line.productId,
-            isActive: true,
-            sizes: { $elemMatch: { sizeLabel: line.sizeLabel, stock: { $gte: line.quantity } } },
+      lines.map((line) => {
+        if (!line.colorSlug) {
+          return {
+            updateOne: {
+              filter: {
+                _id: line.productId,
+                isActive: true,
+                sizes: { $elemMatch: { sizeLabel: line.sizeLabel, stock: { $gte: line.quantity } } },
+              },
+              update: { $inc: { "sizes.$.stock": -line.quantity } },
+            },
+          };
+        }
+        const mirrorBase = leadColor.get(line.productId) === line.colorSlug;
+        return {
+          updateOne: {
+            filter: { _id: line.productId, isActive: true },
+            update: {
+              $inc: {
+                "colorVariants.$[color].sizes.$[size].stock": -line.quantity,
+                ...(mirrorBase ? { "sizes.$[base].stock": -line.quantity } : {}),
+              },
+            },
+            arrayFilters: [
+              { "color.colorSlug": line.colorSlug },
+              { "size.sizeLabel": line.sizeLabel, "size.stock": { $gte: line.quantity } },
+              ...(mirrorBase ? [{ "base.sizeLabel": line.sizeLabel }] : []),
+            ],
           },
-          update: { $inc: { "sizes.$.stock": -line.quantity } },
-        },
-      })),
+        };
+      }),
       options,
     );
     if (stock.modifiedCount !== lines.length) {

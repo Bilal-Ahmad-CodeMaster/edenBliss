@@ -1,17 +1,22 @@
 import { NextResponse } from "next/server";
 import { saveProfileAvatar } from "@/lib/account";
-import { requireUser } from "@/lib/auth";
-import { enforceRateLimit } from "@/lib/guard";
-import { verifyAndSavePrivateUpload } from "@/lib/security";
+import { requireAuth } from "@/lib/auth";
+import { storeVerifiedImage } from "@/lib/media-store";
+import { clientAddress, consumeCountedLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const limited = await enforceRateLimit(request);
-  if (limited) return limited;
-  const auth = await requireUser();
+  const auth = await requireAuth();
   if (!auth.ok) return NextResponse.json({ message: auth.message }, { status: auth.status });
+  const limit = await consumeCountedLimit(`upload:${auth.user.id}:${clientAddress(request.headers)}`, 10);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { message: "Too many uploads. Please wait a moment and try again." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+  }
 
   const form = await request.formData();
   const file = form.get("file");
@@ -20,9 +25,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const saved = await verifyAndSavePrivateUpload(file);
-    const prefix = process.env.PUBLIC_MEDIA_CDN_PREFIX || "/api/media";
-    const profile = await saveProfileAvatar(auth.user.id, `${prefix}/${saved.filename}`);
+    const saved = await storeVerifiedImage(file);
+    const profile = await saveProfileAvatar(auth.user.id, saved.url);
     if (!profile) return NextResponse.json({ message: "The portrait could not be saved." }, { status: 404 });
     return NextResponse.json({ message: "Portrait updated.", profile });
   } catch (error) {

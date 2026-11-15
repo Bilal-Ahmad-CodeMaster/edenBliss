@@ -18,6 +18,7 @@ export type StoreSettingsDTO = {
   storeName: string;
   supportEmail: string;
   supportPhone: string;
+  whatsappNumber: string;
   currencySymbol: string;
   standardShippingRate: number;
   freeShippingThreshold: number;
@@ -38,6 +39,9 @@ export type CartItem = {
   title: string;
   slug: string;
   image: string;
+  colorName: string;
+  colorSlug: string;
+  hexCode: string;
   sizeLabel: string;
   sizeMeasurementsMeters: GarmentMeasurements;
   quantity: number;
@@ -103,6 +107,18 @@ export type CustomerOrder = {
   };
 };
 
+export type ColorSwatch = {
+  colorName: string;
+  colorSlug: string;
+  hexCode: string;
+};
+
+export type ProductColor = ColorSwatch & {
+  images: string[];
+  outfitLookImages: string[];
+  sizes: ProductSizeOption[];
+};
+
 export type ProductCardData = {
   id: string;
   title: string;
@@ -115,6 +131,7 @@ export type ProductCardData = {
   finalPrice: number;
   categoryName: string;
   categorySlug: string;
+  colors?: ColorSwatch[];
 };
 
 export type ProductSizeOption = {
@@ -134,4 +151,5 @@ export type ProductDetail = ProductCardData & {
   sizes: ProductSizeOption[];
   averageRating: number;
   reviewCount: number;
+  colorsDetailed: ProductColor[];
 };

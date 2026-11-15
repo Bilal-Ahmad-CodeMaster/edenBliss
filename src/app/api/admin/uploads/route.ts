@@ -1,17 +1,23 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { enforceRateLimit } from "@/lib/guard";
 import { recordAudit } from "@/lib/job-queue";
-import { requestMeta, verifyAndSavePrivateUpload } from "@/lib/security";
+import { storeVerifiedImage } from "@/lib/media-store";
+import { clientAddress, consumeCountedLimit } from "@/lib/rate-limit";
+import { requestMeta } from "@/lib/security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const limited = await enforceRateLimit(request);
-  if (limited) return limited;
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ message: auth.message }, { status: auth.status === 401 ? 401 : 404 });
+  const limit = await consumeCountedLimit(`upload:${auth.user.id}:${clientAddress(request.headers)}`, 10);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { message: "Too many uploads. Please wait a moment and try again." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+  }
 
   const form = await request.formData();
   const file = form.get("file");
@@ -20,17 +26,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const saved = await verifyAndSavePrivateUpload(file);
-    const prefix = process.env.PUBLIC_MEDIA_CDN_PREFIX || "/api/media";
+    const saved = await storeVerifiedImage(file);
     recordAudit({
       adminId: auth.user.id,
       action: "UPLOAD_IMAGE",
       targetType: "Media",
-      targetId: saved.filename,
+      targetId: "product",
       ...requestMeta(request),
-      diff: { bytes: saved.bytes, mime: saved.mime },
+      diff: { bytes: saved.bytes, mime: saved.mime, host: saved.host },
     });
-    return NextResponse.json({ url: `${prefix}/${saved.filename}`, filename: saved.filename });
+    return NextResponse.json({ url: saved.url });
   } catch (error) {
     const message = error instanceof Error ? error.message : "The image could not be saved.";
     return NextResponse.json({ message }, { status: 400 });

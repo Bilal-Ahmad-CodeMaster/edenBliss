@@ -74,7 +74,10 @@ async function redisLimit(key: string, limit: number, window: number): Promise<L
 }
 
 export async function consumeRateLimit(key: string, scope: "auth" | "public"): Promise<LimitResult> {
-  const limit = limitFor(scope);
+  return consumeCountedLimit(key, limitFor(scope));
+}
+
+export async function consumeCountedLimit(key: string, limit: number): Promise<LimitResult> {
   const window = windowMs();
   try {
     const redis = await redisLimit(`eden:rl:${key}`, limit, window);

@@ -133,7 +133,7 @@ export async function getAdminProduct(id: string) {
   await connectDB();
   const product = await Product.findById(id)
     .select(
-      "title slug storyDescription fabricAndCare images outfitLookImages category subCategory sizes basePrice discountPercentage discountAmount finalPrice isFeatured isActive",
+      "title slug storyDescription fabricAndCare images outfitLookImages colorVariants category subCategory sizes basePrice discountPercentage discountAmount finalPrice isFeatured isActive",
     )
     .lean<{
       _id: { toString(): string };
@@ -143,6 +143,14 @@ export async function getAdminProduct(id: string) {
       fabricAndCare: string;
       images: string[];
       outfitLookImages?: string[];
+      colorVariants?: Array<{
+        colorName: string;
+        colorSlug: string;
+        hexCode: string;
+        images: string[];
+        outfitLookImages?: string[];
+        sizes: { sizeId: { toString(): string }; sizeLabel: string; stock: number }[];
+      }>;
       category: { toString(): string };
       subCategory?: { toString(): string } | null;
       sizes: { sizeId: { toString(): string }; sizeLabel: string; stock: number }[];
@@ -162,6 +170,17 @@ export async function getAdminProduct(id: string) {
     fabricAndCare: product.fabricAndCare,
     images: product.images,
     outfitLookImages: product.outfitLookImages ?? [],
+    colorVariants: (product.colorVariants ?? []).map((variant) => ({
+      colorName: variant.colorName,
+      colorSlug: variant.colorSlug,
+      hexCode: variant.hexCode,
+      images: variant.images,
+      outfitLookImages: variant.outfitLookImages ?? [],
+      sizes: variant.sizes.map((size) => ({
+        sizeId: String(size.sizeId),
+        stock: size.stock,
+      })),
+    })),
     categoryId: String(product.category),
     subCategoryId: product.subCategory ? String(product.subCategory) : "",
     sizes: product.sizes.map((size) => ({
@@ -181,11 +200,15 @@ export async function getAdminProduct(id: string) {
 
 export async function saveProduct(raw: ProductInput, id?: string) {
   const parsed = productWriteSchema.parse(raw);
-  mediaOrThrow([...parsed.images, ...parsed.outfitLookImages]);
+  const variantMedia = parsed.colorVariants.flatMap((variant) => [...variant.images, ...variant.outfitLookImages]);
+  mediaOrThrow([...parsed.images, ...parsed.outfitLookImages, ...variantMedia]);
   if (!isValidObjectId(parsed.categoryId)) {
     throw Object.assign(new Error("Choose a category."), { status: 400 });
   }
-  const sizeIds = parsed.sizes.map((size) => size.sizeId);
+  const sizeIds = [
+    ...parsed.sizes.map((size) => size.sizeId),
+    ...parsed.colorVariants.flatMap((variant) => variant.sizes.map((size) => size.sizeId)),
+  ];
   if (sizeIds.some((sizeId) => !isValidObjectId(sizeId))) {
     throw Object.assign(new Error("Choose sizes from the size book."), { status: 400 });
   }
@@ -215,20 +238,36 @@ export async function saveProduct(raw: ProductInput, id?: string) {
   }
 
   const priced = resolvePricing(parsed.basePrice, parsed.discountMode, parsed.discountPercentage, parsed.discountAmount);
+  const colorVariants = parsed.colorVariants.map((variant) => ({
+    colorName: stripHtml(variant.colorName),
+    colorSlug: slugify(variant.colorSlug),
+    hexCode: variant.hexCode.toUpperCase(),
+    images: variant.images,
+    outfitLookImages: variant.outfitLookImages,
+    sizes: variant.sizes.map((size) => ({
+      sizeId: size.sizeId,
+      sizeLabel: sizeMap.get(size.sizeId) ?? "",
+      stock: size.stock,
+    })),
+  }));
+  const lead = colorVariants[0];
   const next = {
     title: stripHtml(parsed.title),
     slug: slugify(parsed.slug),
     storyDescription: stripHtml(parsed.storyDescription),
     fabricAndCare: stripHtml(parsed.fabricAndCare),
-    images: parsed.images,
-    outfitLookImages: parsed.outfitLookImages,
+    images: lead?.images?.length ? lead.images : parsed.images,
+    outfitLookImages: lead ? lead.outfitLookImages : parsed.outfitLookImages,
     category: parsed.categoryId,
     subCategory: parsed.subCategoryId || null,
-    sizes: parsed.sizes.map((size) => ({
-      sizeId: size.sizeId,
-      sizeLabel: sizeMap.get(size.sizeId) ?? "",
-      stock: size.stock,
-    })),
+    sizes: lead?.sizes?.length
+      ? lead.sizes
+      : parsed.sizes.map((size) => ({
+          sizeId: size.sizeId,
+          sizeLabel: sizeMap.get(size.sizeId) ?? "",
+          stock: size.stock,
+        })),
+    colorVariants,
     basePrice: priced.basePrice,
     discountPercentage: priced.discountPercentage,
     discountAmount: priced.discountAmount,
@@ -278,9 +317,8 @@ export async function getAdminOrder(id: string) {
         title: string;
         image: string;
         sizeLabel: string;
-        sizeMeasurementsMeters: GarmentMeasurements;
-        quantity: number;
-        unitPrice: number;
+        colorName?: string;
+        hexCode?: string;
         discountApplied: number;
         lineTotal: number;
       }>;
@@ -320,6 +358,8 @@ export async function getAdminOrder(id: string) {
       measurements: convertMeasurements(item.sizeMeasurementsMeters),
     })),
     statusHistory: (order.statusHistory ?? []).map((event) => ({
+      colorName: item.colorName ?? "",
+      hexCode: item.hexCode ?? "",
       status: event.status,
       note: event.note ?? "",
       updatedAt: event.updatedAt ? new Date(event.updatedAt).toISOString() : "",

@@ -8,7 +8,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-sage text-alabaster hover:-translate-y-0.5 hover:bg-sage-hover",
+        default: "bg-sage text-white hover:-translate-y-0.5 hover:bg-sage-hover",
         outline:
           "border border-line bg-transparent text-foreground hover:-translate-y-0.5 hover:border-sage hover:text-sage",
         ghost: "tracking-[0.12em] hover:text-sage",

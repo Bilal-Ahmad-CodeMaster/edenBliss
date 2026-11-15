@@ -84,6 +84,9 @@ export function Hero() {
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <MagneticLink href="/shop">Explore Collection</MagneticLink>
+          <MagneticLink href="/lookbook" variant="outline" className="border-alabaster/80 text-alabaster hover:border-alabaster hover:text-alabaster">
+            Lookbook
+          </MagneticLink>
           <MagneticLink
             href="/about"
             variant="outline"

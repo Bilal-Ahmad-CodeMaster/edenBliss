@@ -58,6 +58,7 @@ export default async function ProfilePage({
           profile={profile}
           orders={orders.orders}
           currency={settings.currencySymbol}
+          whatsappNumber={settings.whatsappNumber}
           initialTab={params.tab === "orders" ? "orders" : "details"}
           orderPage={orders.page}
           orderPages={orders.pages}

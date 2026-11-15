@@ -64,6 +64,10 @@ export async function readSession(): Promise<SessionResult> {
   return { status: "active", user: toPublicUser(user) };
 }
 
+export async function requireAuth() {
+  return requireUser();
+}
+
 export async function requireUser() {
   const session = await readSession();
 

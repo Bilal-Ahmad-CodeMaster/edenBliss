@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { OutfitLooks } from "@/components/outfit-looks";
-import { ProductGallery } from "@/components/product-gallery";
-import { PurchasePanel } from "@/components/purchase-panel";
+import { ProductStudio } from "@/components/product-studio";
 import { ReviewsPanel } from "@/components/reviews-panel";
 import { readSession } from "@/lib/auth";
 import { getProductBySlug, getProductReviews, getRelatedProducts, getStoreSettings } from "@/lib/catalog";
@@ -64,14 +62,14 @@ export default async function ProductPage({ params }: Props) {
         </Link>
       </nav>
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:gap-16">
-        <ProductGallery images={product.images} title={product.title} />
-        <PurchasePanel
-          product={product}
-          currency={settings.currencySymbol}
-          authenticated={session.status === "active"}
-        />
-      </div>
+      <ProductStudio
+        product={product}
+        currency={settings.currencySymbol}
+        authenticated={session.status === "active"}
+        initialColor={query.color}
+        whatsappNumber={settings.whatsappNumber}
+        related={related}
+      />
 
       <section className="mt-16 grid gap-10 border-t border-line pt-12 lg:grid-cols-2">
         <div>
@@ -94,7 +92,6 @@ export default async function ProductPage({ params }: Props) {
         </div>
       </section>
 
-      <OutfitLooks images={product.outfitLookImages} title={product.title} related={related} currency={settings.currencySymbol} />
     </article>
   );
 }

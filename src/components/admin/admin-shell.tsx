@@ -11,6 +11,7 @@ const links = [
   ["Categories", "/admin/categories"],
   ["Sizes", "/admin/sizes"],
   ["Pieces", "/admin/products"],
+  ["Lookbook", "/admin/lookbook"],
   ["Orders", "/admin/orders"],
   ["Clients", "/admin/users"],
   ["Profile", "/admin/profile"],

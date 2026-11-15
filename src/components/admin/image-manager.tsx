@@ -10,11 +10,13 @@ export function ImageManager({
   images,
   onChange,
   max = 8,
+  purpose = "product",
 }: {
   label: string;
   images: string[];
   onChange: (images: string[]) => void;
   max?: number;
+  purpose?: "product" | "outfit" | "category" | "lookbook";
 }) {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");

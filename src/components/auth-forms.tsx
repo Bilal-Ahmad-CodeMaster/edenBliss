@@ -24,6 +24,7 @@ function guestPayload() {
     cart: useCartStore.getState().items.map((item) => ({
       productId: item.productId,
       sizeLabel: item.sizeLabel,
+      colorSlug: item.colorSlug ?? "",
       quantity: item.quantity,
     })),
   };

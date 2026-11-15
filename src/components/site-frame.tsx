@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SizeFinderHost } from "@/components/size-finder-host";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getNavCategories, getStoreSettings } from "@/lib/catalog";
@@ -15,7 +16,7 @@ export async function SiteFrame({
 
   return (
     <div data-theme={settings.themeMode} className="min-h-screen bg-background text-foreground">
-      <div className="bg-sage px-4 py-2 text-center text-[11px] uppercase leading-5 tracking-[0.16em] text-alabaster">
+      <div className="bg-sage px-4 py-2 text-center text-[11px] uppercase leading-5 tracking-[0.16em] text-white">
         {settings.announcementBarText}
       </div>
       <SiteHeader

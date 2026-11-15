@@ -136,7 +136,7 @@ function storageDir() {
   return dir;
 }
 
-export async function verifyAndSavePrivateUpload(file: File) {
+export async function inspectImageUpload(file: File) {
   const maxBytes = Number(process.env.MAX_FILE_UPLOAD_SIZE_BYTES) || 2_097_152;
   if (file.size <= 0 || file.size > maxBytes) {
     throw new Error("Images must be 2MB or smaller.");
@@ -152,13 +152,23 @@ export async function verifyAndSavePrivateUpload(file: File) {
       : detected.mime === "image/png"
         ? stripPngMetadata(bytes)
         : bytes;
+  return { buffer: cleaned, mime: detected.mime, ext: detected.ext };
+}
+
+export async function savePrivateImageBuffer(buffer: Buffer, ext: "jpg" | "png" | "webp" | "avif") {
   const dir = storageDir();
   await mkdir(dir, { recursive: true });
-  const filename = `${randomUUID()}.${detected.ext}`;
+  const filename = `${randomUUID()}.${ext}`;
   const target = path.join(dir, filename);
   if (path.dirname(target) !== dir) throw new Error("Invalid storage path.");
-  await writeFile(target, cleaned, { flag: "wx" });
-  return { filename, mime: detected.mime, bytes: cleaned.length };
+  await writeFile(target, buffer, { flag: "wx" });
+  return { filename, bytes: buffer.length };
+}
+
+export async function verifyAndSavePrivateUpload(file: File) {
+  const inspected = await inspectImageUpload(file);
+  const saved = await savePrivateImageBuffer(inspected.buffer, inspected.ext);
+  return { filename: saved.filename, mime: inspected.mime, bytes: saved.bytes };
 }
 
 export async function readPrivateImage(filename: string) {

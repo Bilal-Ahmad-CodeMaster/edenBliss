@@ -76,6 +76,36 @@ export function OrderDesk({
   const [detail, setDetail] = useState<OrderDetail | null>(null);
   const [detailError, setDetailError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [printing, setPrinting] = useState(false);
+
+  async function downloadSlips(ids: string[]) {
+    if (!ids.length || printing) return;
+    setPrinting(true);
+    try {
+      const response = await clientFetch("/api/admin/orders/slips", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!response.ok) {
+        const data = (await response.json()) as { message?: string };
+        toast.error(data.message ?? "The slip could not be prepared.");
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "eden-bliss-cod-slips.pdf";
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("The slip could not be prepared.");
+    } finally {
+      setPrinting(false);
+    }
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -175,6 +205,14 @@ export function OrderDesk({
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          disabled={!selected.length || printing}
+          onClick={() => void downloadSlips(selected)}
+          className="h-11 border border-sage px-4 text-[11px] uppercase tracking-[0.14em] text-sage disabled:opacity-40"
+        >
+          {printing ? "Preparing" : "Bulk print selected slips"}
+        </button>
       </div>
       <DeskAlert message={message} />
       {loading ? <div className="shimmer h-2" /> : null}
@@ -183,7 +221,7 @@ export function OrderDesk({
         estimate={84}
         empty="No cash-on-delivery orders yet."
         renderRow={(row) => (
-          <div className="flex h-full items-center justify-between gap-4 px-4 text-sm">
+          <div className="flex h-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
             <div className="min-w-0">
               <p className="font-serif text-xl">{row.orderNumber}</p>
               <p className="truncate text-xs text-muted">
@@ -191,6 +229,17 @@ export function OrderDesk({
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-3">
+              <input
+                type="checkbox"
+                aria-label={`Select ${row.orderNumber}`}
+                checked={selected.includes(row.id)}
+                onChange={(event) =>
+                  setSelected((current) => (event.target.checked ? [...current, row.id] : current.filter((id) => id !== row.id)))
+                }
+              />
+              <button type="button" className="text-[11px] uppercase tracking-[0.14em]" onClick={() => void downloadSlips([row.id])}>
+                Download COD Slip (PDF)
+              </button>
               <span className="text-[11px] uppercase tracking-[0.14em] text-muted">{row.status}</span>
               <button type="button" className="text-[11px] uppercase tracking-[0.14em] text-sage" onClick={() => setOpenId(row.id)}>
                 Open
@@ -212,6 +261,9 @@ export function OrderDesk({
       >
           {detail ? (
             <div className="space-y-6">
+              <button type="button" className="text-[11px] uppercase tracking-[0.14em] text-sage" onClick={() => void downloadSlips([detail.id])}>
+                Download COD slip (PDF)
+              </button>
               <label className="block space-y-2">
                 <span className="text-[11px] uppercase tracking-[0.16em] text-muted">Status</span>
                 <select

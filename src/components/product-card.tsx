@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { memo, useCallback, useState } from "react";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
+import { ColorSwatches } from "@/components/color-swatches";
 import { EditorialImage } from "@/components/editorial-image";
 import { clientFetch } from "@/lib/client-fetch";
 import { RESTRICTED_MESSAGE } from "@/lib/constants";
@@ -27,7 +28,12 @@ export const ProductCard = memo(function ProductCard({
   const [pending, setPending] = useState(false);
   const reduce = useReducedMotion();
   const onSale = product.discountPercentage > 0;
-  const secondary = product.images.find((image) => image && image !== product.image) ?? "";
+  const colors = product.colors ?? [];
+  const [colorSlug, setColorSlug] = useState(colors[0]?.colorSlug ?? "");
+  const color = colors.find((entry) => entry.colorSlug === colorSlug) ?? colors[0];
+  const image = color?.images[0] || product.image;
+  const secondary = (color?.images ?? product.images).find((entry) => entry && entry !== image) ?? "";
+  const href = color ? `/product/${product.slug}?color=${color.colorSlug}` : `/product/${product.slug}`;
   const offLabel = `−${Math.round(product.discountPercentage)}% OFF`;
 
   const toggleWishlist = useCallback(async () => {
@@ -72,10 +78,12 @@ export const ProductCard = memo(function ProductCard({
   return (
     <article className="group min-w-0">
       <div className="relative aspect-[3/4] overflow-hidden bg-linen">
-        <Link href={`/product/${product.slug}`} className="absolute inset-0 block">
+        <Link href={href} className="absolute inset-0 block">
           <div className="absolute inset-0 transition duration-700 group-hover:scale-[1.03]">
+            <AnimatePresence mode="wait">
+              <motion.div key={image} className="absolute inset-0" initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={reduce ? undefined : { opacity: 0 }}>
             <EditorialImage
-              src={product.image}
+              src={image}
               alt={product.title}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className={secondary ? "transition duration-700 group-hover:opacity-0" : ""}
@@ -88,6 +96,8 @@ export const ProductCard = memo(function ProductCard({
                 className="opacity-0 transition duration-700 group-hover:opacity-100"
               />
             ) : null}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </Link>
         {onSale ? (
@@ -110,9 +120,14 @@ export const ProductCard = memo(function ProductCard({
       <div className="mt-4 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-[0.18em] text-muted">{product.categoryName}</p>
-          <Link href={`/product/${product.slug}`} className="mt-1 block font-serif text-2xl leading-tight hover:text-sage">
+          <Link href={href} className="mt-1 block font-serif text-2xl leading-tight hover:text-sage">
             {product.title}
           </Link>
+          {colors.length > 1 ? (
+            <div className="mt-3">
+              <ColorSwatches colors={colors} active={color?.colorSlug ?? ""} onChange={setColorSlug} />
+            </div>
+          ) : null}
         </div>
         <div className="shrink-0 text-right text-sm">
           <p>{formatMoney(product.finalPrice, currency)}</p>

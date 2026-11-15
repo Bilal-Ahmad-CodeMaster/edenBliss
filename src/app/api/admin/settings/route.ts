@@ -17,6 +17,7 @@ const settingsSchema = z.object({
   supportEmail: z.string().trim().email().max(120),
   adminEmail: z.string().trim().email().max(120),
   supportPhone: z.string().trim().min(6).max(40),
+  whatsappNumber: z.string().trim().min(8).max(20),
   currencySymbol: z.string().trim().min(1).max(8),
   standardShippingRate: z.coerce.number().min(0).max(100000),
   freeShippingThreshold: z.coerce.number().min(0).max(10000000),

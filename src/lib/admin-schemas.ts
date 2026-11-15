@@ -11,7 +11,7 @@ export const categoryWriteSchema = z.object({
   name: z.string().trim().min(2).max(80),
   slug,
   description: z.string().trim().min(2).max(600),
-  imageUrl: z.string().trim().max(400).optional().default(""),
+  imageUrl: z.string().trim().max(800).optional().default(""),
   parentCategory: z.string().trim().optional().nullable(),
   isActive: z.boolean().default(true),
 });
@@ -29,13 +29,33 @@ export const sizeWriteSchema = z.object({
   }),
 });
 
+const mediaUrl = z.string().trim().min(1).max(800);
+
+const colorVariantWriteSchema = z.object({
+  colorName: z.string().trim().min(2).max(40),
+  colorSlug: slug,
+  hexCode: z.string().trim().regex(/^#[0-9A-Fa-f]{6}$/, "Use a hex colour such as #B54B5A."),
+  images: z.array(mediaUrl).min(1).max(8),
+  outfitLookImages: z.array(mediaUrl).max(8).default([]),
+  sizes: z
+    .array(
+      z.object({
+        sizeId: z.string().trim().min(1),
+        stock: z.coerce.number().int().min(0).max(10000),
+      }),
+    )
+    .min(1)
+    .max(20),
+});
+
 export const productWriteSchema = z.object({
   title: z.string().trim().min(2).max(140),
   slug,
   storyDescription: z.string().trim().min(10).max(4000),
   fabricAndCare: z.string().trim().min(2).max(2000),
-  images: z.array(z.string().trim().min(1).max(400)).min(1).max(8),
-  outfitLookImages: z.array(z.string().trim().min(1).max(400)).max(8).default([]),
+  images: z.array(mediaUrl).min(1).max(8),
+  outfitLookImages: z.array(mediaUrl).max(8).default([]),
+  colorVariants: z.array(colorVariantWriteSchema).max(8).default([]),
   categoryId: z.string().trim().min(1),
   subCategoryId: z.string().trim().optional().nullable(),
   sizes: z

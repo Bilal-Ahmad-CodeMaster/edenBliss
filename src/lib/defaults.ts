@@ -4,6 +4,7 @@ export const defaultStoreSettings: StoreSettingsDTO = {
   storeName: "Eden Bliss",
   supportEmail: "edenbliss.official@gmail.com",
   supportPhone: "+923161667298",
+  whatsappNumber: "+923161667298",
   currencySymbol: "Rs.",
   standardShippingRate: 450,
   freeShippingThreshold: 15000,

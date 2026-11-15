@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { clientFetch } from "@/lib/client-fetch";
@@ -55,6 +55,25 @@ export function PurchasePanel({
     try {
       const response = await clientFetch("/api/wishlist", {
         method: "POST",
+  useEffect(() => {
+    setSizeLabel(product.sizes.find((size) => size.stock > 0)?.sizeLabel ?? "");
+  }, [product.sizes, colorSlug]);
+
+  useEffect(() => {
+    function onPick(event: Event) {
+      const detail = (event as CustomEvent<{ sizeLabel?: string; waistMeters?: number }>).detail;
+      if (!detail?.sizeLabel) return;
+      if (product.sizes.some((size) => size.sizeLabel === detail.sizeLabel && size.stock > 0)) {
+        setSizeLabel(detail.sizeLabel);
+      }
+      if (detail.waistMeters) {
+        sessionStorage.setItem("eden-fit-note", `Waist ${detail.waistMeters.toFixed(2)} m`);
+      }
+    }
+    window.addEventListener("eden:select-size", onPick);
+    return () => window.removeEventListener("eden:select-size", onPick);
+  }, [product.sizes]);
+
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId: product.id }),
       });
@@ -104,16 +123,19 @@ export function PurchasePanel({
       ? current.map((item) =>
           item === existing
             ? { ...item, quantity: Math.min(selected.stock, item.quantity + draft.quantity) }
-            : item,
-        )
-      : [...current, draft];
+      colorName,
+      colorSlug,
+      hexCode,
+      sizeLabel: selected.sizeLabel,
+      sizeMeasurementsMeters: selected.measurementsInMeters,
+      quantity: Math.min(quantity, selected.stock),
+      unitPrice: product.finalPrice,
+      discountApplied: Math.max(0, product.basePrice - product.finalPrice),
+    };
 
-    const previous = useCartStore.getState().items;
-    useCartStore.getState().replace(next);
-    const signedIn = authenticated || Boolean(useSessionStore.getState().user);
-    if (!signedIn) {
-      toast.success("Added to your bag.");
-      return;
+    const current = useCartStore.getState().items;
+    const existing = current.find(
+      (item) => item.productId === draft.productId && item.sizeLabel === draft.sizeLabel && item.colorSlug === draft.colorSlug,
     }
 
     setPending(true);
@@ -140,6 +162,7 @@ export function PurchasePanel({
         useCartStore.getState().replace(previous);
         toast.error(data.message ?? "The bag could not be updated.");
         return;
+            colorSlug: item.colorSlug,
       }
       useCartStore.getState().replace(data.items);
       toast.success("Added to your bag.");
@@ -184,9 +207,33 @@ export function PurchasePanel({
                 className={`h-11 min-w-11 border px-3 text-sm transition duration-300 disabled:cursor-not-allowed disabled:opacity-40 ${
                   active ? "border-sage bg-sage text-alabaster" : "border-line hover:border-sage"
                 }`}
-              >
-                {size.sizeLabel}
-              </button>
+      {colors.length ? (
+        <div className="mt-6">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">{colorName || "Colour"}</p>
+          <div className="mt-3">
+            <ColorSwatches colors={colors} active={colorSlug} onChange={(slug) => onColor?.(slug)} />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Size</p>
+          <button
+            type="button"
+            className="text-[11px] uppercase tracking-[0.14em] text-sage"
+            onClick={() =>
+              openSizeFinder({
+                sizes: product.sizes,
+                productTitle: product.title,
+                colorName,
+                canSelect: true,
+              })
+            }
+          >
+            Find my size
+          </button>
+        </div>
             );
           })}
         </div>

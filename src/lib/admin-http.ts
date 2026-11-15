@@ -10,6 +10,14 @@ export function isDuplicateKey(error: unknown) {
 
 export function isAllowedMediaUrl(value: string) {
   if (!value) return true;
+  if (value.startsWith("https://res.cloudinary.com/")) {
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" && url.hostname === "res.cloudinary.com" && url.pathname.includes("/image/upload/");
+    } catch {
+      return false;
+    }
+  }
   const prefix = `${process.env.PUBLIC_MEDIA_CDN_PREFIX || "/api/media"}/`;
   if (!value.startsWith(prefix)) return false;
   const name = value.slice(prefix.length);

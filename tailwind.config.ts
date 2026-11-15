@@ -6,12 +6,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        alabaster: "#FAF7F2",
-        obsidian: "#1C1917",
-        ink: "#121110",
+        alabaster: "#FFFFFF",
+        obsidian: "#111111",
+        ink: "#111111",
         sage: {
-          DEFAULT: "#3F5A45",
-          hover: "#2F4534",
+          DEFAULT: "#B54B5A",
+          hover: "#8E3A48",
         },
         terracotta: "#9E473B",
         linen: "#E6E1DA",

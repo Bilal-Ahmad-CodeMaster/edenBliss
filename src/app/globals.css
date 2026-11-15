@@ -4,10 +4,10 @@
 
 :root,
 [data-theme="warm-linen"] {
-  --background: #faf7f2;
-  --foreground: #1c1917;
-  --muted: #6f675f;
-  --line: #e6e1da;
+  --background: #ffffff;
+  --foreground: #111111;
+  --muted: #5c5656;
+  --line: #eadfe1;
   color-scheme: light;
 }
 
@@ -117,6 +117,45 @@ canvas {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.bg-sage {
+  background-color: #b54b5a;
+}
+
+.bg-sage\/10 {
+  background-color: rgb(181 75 90 / 0.1);
+}
+
+.bg-sage\/40 {
+  background-color: rgb(181 75 90 / 0.4);
+}
+
+.border-sage,
+.hover\:border-sage:hover {
+  border-color: #b54b5a;
+}
+
+.text-sage,
+.hover\:text-sage:hover {
+  color: #b54b5a;
+}
+
+.fill-sage {
+  fill: #b54b5a;
+}
+
+.ring-sage,
+.focus-visible\:ring-sage:focus-visible {
+  --tw-ring-color: #b54b5a;
+}
+
+.hover\:bg-sage:hover {
+  background-color: #b54b5a;
+}
+
+.hover\:bg-sage-hover:hover {
+  background-color: #8e3a48;
 }
 
 @keyframes shimmer {

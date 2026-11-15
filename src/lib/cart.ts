@@ -10,6 +10,7 @@ import type { GarmentMeasurements } from "@/lib/measurements";
 export type IncomingCartLine = {
   productId: string;
   sizeLabel: string;
+  colorSlug?: string;
   quantity: number;
 };
 
@@ -17,6 +18,14 @@ type ProductSizeRow = {
   sizeId: { toString(): string };
   sizeLabel: string;
   stock: number;
+};
+
+type ColorVariantLean = {
+  colorName: string;
+  colorSlug: string;
+  hexCode: string;
+  images?: string[];
+  sizes?: ProductSizeRow[];
 };
 
 type ProductLean = {
@@ -29,6 +38,7 @@ type ProductLean = {
   finalPrice?: number;
   isActive: boolean;
   sizes: ProductSizeRow[];
+  colorVariants?: ColorVariantLean[];
 };
 
 type SizeLean = {
@@ -36,8 +46,8 @@ type SizeLean = {
   measurementsInMeters: GarmentMeasurements;
 };
 
-function lineKey(productId: string, sizeLabel: string) {
-  return `${productId}:${sizeLabel.toUpperCase()}`;
+function lineKey(productId: string, sizeLabel: string, colorSlug = "") {
+  return `${productId}:${colorSlug}:${sizeLabel.toUpperCase()}`;
 }
 
 export function collapseCartLines(items: IncomingCartLine[]) {
@@ -45,12 +55,14 @@ export function collapseCartLines(items: IncomingCartLine[]) {
 
   for (const item of items) {
     if (!isObjectId(item.productId)) continue;
-    const key = lineKey(item.productId, item.sizeLabel);
+    const colorSlug = item.colorSlug ?? "";
+    const key = lineKey(item.productId, item.sizeLabel, colorSlug);
     const existing = map.get(key);
     if (!existing) {
       map.set(key, {
         productId: item.productId,
         sizeLabel: item.sizeLabel.toUpperCase(),
+        colorSlug,
         quantity: item.quantity,
       });
     } else {
@@ -66,11 +78,11 @@ export function mergeCartLines(saved: IncomingCartLine[], guest: IncomingCartLin
   const map = new Map<string, IncomingCartLine>();
 
   for (const item of collapseCartLines(saved)) {
-    map.set(lineKey(item.productId, item.sizeLabel), item);
+    map.set(lineKey(item.productId, item.sizeLabel, item.colorSlug), item);
   }
 
   for (const item of collapseCartLines(guest)) {
-    const key = lineKey(item.productId, item.sizeLabel);
+    const key = lineKey(item.productId, item.sizeLabel, item.colorSlug);
     const existing = map.get(key);
     if (!existing) map.set(key, item);
     else existing.quantity = Math.max(existing.quantity, item.quantity);
@@ -86,7 +98,7 @@ export async function resolveCartItems(items: IncomingCartLine[]): Promise<CartI
   const productIds = [...new Set(collapsed.map((item) => item.productId))];
   const [products, sizes] = await Promise.all([
     Product.find({ _id: { $in: productIds }, isActive: true })
-      .select("title slug images basePrice discountPercentage finalPrice isActive sizes")
+      .select("title slug images colorVariants basePrice discountPercentage finalPrice isActive sizes")
       .lean<ProductLean[]>(),
     Size.find().select("measurementsInMeters").lean<SizeLean[]>(),
   ]);
@@ -99,9 +111,13 @@ export async function resolveCartItems(items: IncomingCartLine[]): Promise<CartI
     const product = productMap.get(item.productId);
     if (!product) continue;
 
-    const sizeRow = product.sizes.find(
-      (row) => row.sizeLabel.toUpperCase() === item.sizeLabel.toUpperCase(),
-    );
+    const variant =
+      (product.colorVariants ?? []).find((entry) => entry.colorSlug === (item.colorSlug || "")) ??
+      (item.colorSlug ? undefined : product.colorVariants?.[0]);
+    if (item.colorSlug && product.colorVariants?.length && !variant) continue;
+
+    const sizeSource = variant?.sizes?.length ? variant.sizes : product.sizes;
+    const sizeRow = sizeSource.find((row) => row.sizeLabel.toUpperCase() === item.sizeLabel.toUpperCase());
     if (!sizeRow || sizeRow.stock < 1) continue;
 
     const size = sizeMap.get(String(sizeRow.sizeId));
@@ -115,7 +131,10 @@ export async function resolveCartItems(items: IncomingCartLine[]): Promise<CartI
       productId: String(product._id),
       title: product.title,
       slug: product.slug,
-      image: product.images[0],
+      image: variant?.images?.[0] || product.images[0] || "",
+      colorName: variant?.colorName ?? "",
+      colorSlug: variant?.colorSlug ?? "",
+      hexCode: variant?.hexCode ?? "",
       sizeLabel: sizeRow.sizeLabel,
       sizeMeasurementsMeters: size.measurementsInMeters,
       quantity: Math.min(item.quantity, sizeRow.stock, 10),
@@ -128,11 +147,12 @@ export async function resolveCartItems(items: IncomingCartLine[]): Promise<CartI
 }
 
 export function toIncomingCart(
-  items: Array<{ product: { toString(): string }; sizeLabel: string; quantity: number }>,
+  items: Array<{ product: { toString(): string }; sizeLabel: string; quantity: number; colorSlug?: string }>,
 ): IncomingCartLine[] {
   return items.map((item) => ({
     productId: String(item.product),
     sizeLabel: item.sizeLabel,
+    colorSlug: item.colorSlug ?? "",
     quantity: item.quantity,
   }));
 }
@@ -143,6 +163,9 @@ export function serializeCart(items: CartItem[]) {
     title: item.title,
     slug: item.slug,
     image: item.image,
+    colorName: item.colorName,
+    colorSlug: item.colorSlug,
+    hexCode: item.hexCode,
     sizeLabel: item.sizeLabel,
     sizeMeasurementsMeters: item.sizeMeasurementsMeters,
     quantity: item.quantity,
@@ -163,6 +186,9 @@ export async function readStoredCart(userId: string): Promise<CartItem[]> {
       title: string;
       slug: string;
       image: string;
+      colorName?: string;
+      colorSlug?: string;
+      hexCode?: string;
       sizeLabel: string;
       sizeMeasurementsMeters: GarmentMeasurements;
       quantity: number;
@@ -177,6 +203,9 @@ export async function readStoredCart(userId: string): Promise<CartItem[]> {
     title: item.title,
     slug: item.slug,
     image: item.image,
+    colorName: item.colorName ?? "",
+    colorSlug: item.colorSlug ?? "",
+    hexCode: item.hexCode ?? "",
     sizeLabel: item.sizeLabel,
     sizeMeasurementsMeters: item.sizeMeasurementsMeters,
     quantity: item.quantity,

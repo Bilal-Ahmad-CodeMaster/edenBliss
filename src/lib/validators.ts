@@ -44,18 +44,22 @@ export const catalogIdsSchema = z.object({
   ids: z.array(z.string()).max(100),
 });
 
+function text(missing: string) {
+  return z.string({ required_error: missing, invalid_type_error: missing });
+}
+
 export const checkoutFormSchema = z.object({
-  fullName: z.string().trim().min(2, "Share the name for the parcel.").max(80),
-  phone: z.string().trim().min(6, "Add a phone number.").max(30),
-  email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(120),
-  address: z.string().trim().min(4, "Add the street address.").max(180),
-  city: z.string().trim().min(2, "Add the city.").max(80),
-  state: z.string().trim().max(80),
-  postalCode: z.string().trim().min(3, "Add the postal code.").max(16),
-  country: z.string().trim().max(80),
-  customFitNotes: z.string().trim().max(1000),
-  saveToProfile: z.boolean(),
-  idempotencyKey: z.string().uuid(),
+  fullName: text("Share the name for the parcel.").trim().min(2, "Share the name for the parcel.").max(80),
+  phone: text("Add a phone number.").trim().min(6, "Add a phone number.").max(30),
+  email: text("Enter a valid email address.").trim().toLowerCase().email("Enter a valid email address.").max(120),
+  address: text("Add the street address.").trim().min(4, "Add the street address.").max(180),
+  city: text("Add the city.").trim().min(2, "Add the city.").max(80),
+  state: text("Add the state.").trim().max(80),
+  postalCode: text("Add the postal code.").trim().min(3, "Add the postal code.").max(16),
+  country: text("Add the country.").trim().max(80),
+  customFitNotes: text("Check the fit note.").trim().max(1000),
+  saveToProfile: z.boolean({ required_error: "Choose whether to save the address.", invalid_type_error: "Choose whether to save the address." }),
+  idempotencyKey: text("The checkout could not be confirmed. Try again.").uuid("The checkout could not be confirmed. Try again."),
 });
 
 export const profileFormSchema = z.object({
@@ -73,6 +77,16 @@ export const reviewFormSchema = z.object({
   productId: z.string().trim(),
   rating: z.coerce.number().int().min(1).max(5),
   comment: z.string().trim().min(2, "Leave a short note.").max(2000),
+});
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(120),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Enter a valid email address.").max(120),
+  code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code from the email."),
+  password: z.string().min(8, "Use at least 8 characters.").max(72, "Passwords are limited to 72 characters."),
 });
 
 export const passwordChangeSchema = z.object({

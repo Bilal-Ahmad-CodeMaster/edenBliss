@@ -136,13 +136,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  const publicReviewRead = request.method === "GET" && pathname.startsWith("/api/reviews");
   const needsSession =
     pathname.startsWith("/account") ||
     pathname.startsWith("/profile") ||
     pathname.startsWith("/checkout") ||
     pathname.startsWith("/wishlist") ||
     pathname.startsWith("/order-success") ||
-    isGuardedApi(pathname);
+    (isGuardedApi(pathname) && !publicReviewRead);
   if (!token) {
     if (!needsSession) {
       const response = NextResponse.next({ request: { headers: requestHeaders } });

@@ -1,4 +1,4 @@
-import { Schema, model, models, type InferSchemaType, type Types } from "mongoose";
+import mongoose, { Schema, model, models, type InferSchemaType, type Types } from "mongoose";
 
 const measurementSchema = new Schema(
   {
@@ -52,6 +52,9 @@ const userSchema = new Schema(
       maxlength: 120,
     },
     passwordHash: { type: String, required: true, select: false },
+    passwordResetHash: { type: String, select: false, default: "" },
+    passwordResetExpires: { type: Date, select: false, default: null },
+    passwordResetAttempts: { type: Number, select: false, default: 0, min: 0 },
     role: { type: String, enum: ["USER", "ADMIN"], default: "USER", required: true },
     avatarUrl: { type: String, default: "" },
     phone: { type: String, trim: true, default: "" },
@@ -69,6 +72,9 @@ const userSchema = new Schema(
       transform(_doc, ret) {
         const safe = { ...ret };
         Reflect.deleteProperty(safe, "passwordHash");
+        Reflect.deleteProperty(safe, "passwordResetHash");
+        Reflect.deleteProperty(safe, "passwordResetExpires");
+        Reflect.deleteProperty(safe, "passwordResetAttempts");
         return safe;
       },
     },
@@ -76,6 +82,10 @@ const userSchema = new Schema(
 );
 
 userSchema.index({ isOnline: 1, lastActiveAt: -1 });
+
+if (models.User && !models.User.schema.path("passwordResetHash")) {
+  mongoose.deleteModel("User");
+}
 
 export type UserDocument = InferSchemaType<typeof userSchema> & {
   _id: Types.ObjectId;

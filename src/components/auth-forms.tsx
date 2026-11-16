@@ -162,6 +162,11 @@ export function LoginForm({ restricted, nextPath = "/" }: { restricted: boolean;
           <p className="text-sm text-terracotta">{form.formState.errors.password.message}</p>
         ) : null}
       </div>
+      <p className="text-right text-sm">
+        <Link href="/forgot-password" className="text-muted underline-offset-4 hover:text-sage hover:underline">
+          Forgot password?
+        </Link>
+      </p>
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Signing in" : "Sign in"}
       </Button>

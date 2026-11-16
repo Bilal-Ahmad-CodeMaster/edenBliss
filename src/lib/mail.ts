@@ -1,8 +1,7 @@
 import "server-only";
-import { resolve4 } from "node:dns";
+import { Resolver } from "node:dns";
 import nodemailer from "nodemailer";
 import { connectDB } from "@/lib/db";
-import { usePublicDnsWhenLoopback } from "@/lib/mongo-dns";
 import { formatMoney } from "@/lib/prices";
 import { stripHtml } from "@/lib/sanitize";
 import { Order } from "@/models/Order";
@@ -13,10 +12,11 @@ function oneLine(value: string) {
 }
 
 function resolveMailHost(hostname: string) {
-  usePublicDnsWhenLoopback();
+  const resolver = new Resolver();
+  resolver.setServers(["8.8.8.8", "1.1.1.1"]);
   return new Promise<string>((resolve) => {
-    resolve4(hostname, (error, addresses) => {
-      resolve(!error && addresses[0] ? addresses[0] : hostname);
+    resolver.resolve4(hostname, (error, addresses) => {
+      resolve(!error && addresses?.[0] ? addresses[0] : hostname);
     });
   });
 }
@@ -50,9 +50,9 @@ export async function getAdminInbox() {
   }
 }
 
-export async function sendAdminMail(input: { subject: string; text: string; replyTo?: string }) {
+async function deliverMail(input: { to: string; subject: string; text: string; replyTo?: string }) {
   const config = smtpConfig();
-  const to = await getAdminInbox();
+  const to = oneLine(input.to);
   if (!config || !to) return false;
 
   const timeout = Math.max(Number(process.env.EXTERNAL_API_TIMEOUT_MS) || 5000, 12000);
@@ -77,6 +77,16 @@ export async function sendAdminMail(input: { subject: string; text: string; repl
     text: input.text,
   });
   return true;
+}
+
+export async function sendAdminMail(input: { subject: string; text: string; replyTo?: string }) {
+  const to = await getAdminInbox();
+  if (!to) return false;
+  return deliverMail({ ...input, to });
+}
+
+export async function sendCustomerMail(input: { to: string; subject: string; text: string }) {
+  return deliverMail(input);
 }
 
 type NoticeOrder = {
@@ -114,28 +124,41 @@ export async function sendOrderNotice(orderNumber: string) {
   const address = [ship.address, ship.city, ship.state, ship.postalCode, ship.country].filter(Boolean).join(", ");
   const notes = stripHtml(order.customFitNotes ?? "").trim();
 
-  return sendAdminMail({
+  const summary = [
+    `Order: ${order.orderNumber}`,
+    `Name: ${ship.fullName ?? ""}`,
+    `Email: ${ship.email ?? ""}`,
+    `Phone: ${ship.phone ?? ""}`,
+    `Address: ${address}`,
+    notes ? `Fit notes: ${notes}` : "",
+    ``,
+    lines,
+    ``,
+    `Subtotal: ${formatMoney(order.subtotal)}`,
+    `Discount: ${formatMoney(order.totalDiscount)}`,
+    `Shipping: ${formatMoney(order.shippingFee)}`,
+    `Tax: ${formatMoney(order.taxAmount)}`,
+    `Total due on delivery: ${formatMoney(order.grandTotal)}`,
+  ].filter((line) => line !== "");
+
+  const adminSent = await sendAdminMail({
     subject: `New cash-on-delivery order ${order.orderNumber}`,
     replyTo: ship.email,
-    text: [
-      `A new order is waiting at the atelier.`,
-      ``,
-      `Order: ${order.orderNumber}`,
-      `Name: ${ship.fullName ?? ""}`,
-      `Email: ${ship.email ?? ""}`,
-      `Phone: ${ship.phone ?? ""}`,
-      `Address: ${address}`,
-      notes ? `Fit notes: ${notes}` : "",
-      ``,
-      lines,
-      ``,
-      `Subtotal: ${formatMoney(order.subtotal)}`,
-      `Discount: ${formatMoney(order.totalDiscount)}`,
-      `Shipping: ${formatMoney(order.shippingFee)}`,
-      `Tax: ${formatMoney(order.taxAmount)}`,
-      `Total due on delivery: ${formatMoney(order.grandTotal)}`,
-    ]
-      .filter((line) => line !== "")
-      .join("\n"),
+    text: [`A new order is waiting at the atelier.`, ``, ...summary].join("\n"),
   });
+
+  const customerEmail = ship.email?.trim().toLowerCase() ?? "";
+  if (customerEmail) {
+    try {
+      await sendCustomerMail({
+        to: customerEmail,
+        subject: `Your Eden Bliss order ${order.orderNumber}`,
+        text: [`Your cash-on-delivery order is confirmed. Pay when the parcel arrives.`, ``, ...summary].join("\n"),
+      });
+    } catch (error) {
+      console.error("The customer receipt was not mailed.", error instanceof Error ? error.message : "Unknown mail error");
+    }
+  }
+
+  return adminSent;
 }

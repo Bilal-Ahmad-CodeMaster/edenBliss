@@ -25,7 +25,10 @@ export async function POST(request: Request) {
   if (!auth.ok) return NextResponse.json({ message: auth.message }, { status: auth.status === 401 ? 401 : 404 });
 
   const parsed = bodySchema.safeParse(await readJson(request));
-  if (!parsed.success || parsed.data.ids.some((id) => !isValidObjectId(id))) {
+  if (!parsed.success) {
+    return NextResponse.json({ message: "Choose an order before printing the slip." }, { status: 400 });
+  }
+  if (parsed.data.ids.some((id) => !isValidObjectId(id))) {
     return NextResponse.json({ message: "Choose a valid order." }, { status: 400 });
   }
 

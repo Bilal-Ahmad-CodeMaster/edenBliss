@@ -25,6 +25,7 @@ export function DeskDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[90] bg-ink/50" />
         <Dialog.Content
+          onFocusOutside={(event) => event.preventDefault()}
           className={cn(
             "fixed left-1/2 top-1/2 z-[90] flex max-h-[min(92dvh,52rem)] w-[min(100%-2rem,32rem)] -translate-x-1/2 -translate-y-1/2 flex-col border border-line bg-background p-6 shadow-editorial outline-none",
             wide && "w-[min(100%-2rem,56rem)]",

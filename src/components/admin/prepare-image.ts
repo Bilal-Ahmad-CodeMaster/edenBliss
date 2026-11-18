@@ -53,7 +53,7 @@ export async function uploadPreparedImage(
   const body = new FormData();
   body.set("file", prepared);
   body.set("purpose", purpose);
-  const response = await clientFetch("/api/upload", { method: "POST", body });
+  const response = await clientFetch("/api/upload", { method: "POST", body, timeoutMs: 30000 });
   const data = (await response.json()) as { url?: string; message?: string };
   if (!response.ok || !data.url) throw new Error(data.message ?? "The image could not be saved.");
   return data.url;

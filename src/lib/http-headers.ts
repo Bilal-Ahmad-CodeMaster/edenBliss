@@ -7,7 +7,7 @@ export function securityHeaderEntries() {
     "default-src 'self'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://images.unsplash.com",
+    "img-src 'self' data: blob: https://images.unsplash.com https://res.cloudinary.com",
     "font-src 'self'",
     "connect-src 'self'",
     "frame-ancestors 'none'",

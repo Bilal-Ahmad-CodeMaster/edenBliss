@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { clientFetch } from "@/lib/client-fetch";
 import { compressProfileImage } from "@/lib/compress-image";
-import { telHref } from "@/lib/utils";
+import { whatsAppHref } from "@/lib/whatsapp";
 import { useSessionStore } from "@/store/session-store";
 import type { CustomerOrder, CustomerProfile } from "@/types/commerce";
 
@@ -225,8 +225,8 @@ export function ProfileDesk({
               <Label htmlFor="profile-phone">Phone</Label>
               <Input id="profile-phone" type="tel" value={form.phone} autoComplete="tel" onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} />
               {form.phone ? (
-                <a className="inline-block text-sm hover:text-sage" href={telHref(form.phone)}>
-                  Call {form.phone}
+                <a className="inline-block text-sm hover:text-sage" href={whatsAppHref(form.phone)} target="_blank" rel="noreferrer">
+                  WhatsApp {form.phone}
                 </a>
               ) : null}
             </div>

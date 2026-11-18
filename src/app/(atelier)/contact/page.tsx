@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/contact-form";
 import { getStoreSettings } from "@/lib/catalog";
-import { telHref } from "@/lib/utils";
+import { storeWhatsAppHref, storeWhatsAppNumber } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -37,10 +37,10 @@ export default async function ContactPage() {
           </dd>
         </div>
         <div>
-          <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">Telephone</dt>
+          <dt className="text-[11px] uppercase tracking-[0.18em] text-muted">WhatsApp</dt>
           <dd className="mt-2 font-serif text-3xl">
-            <a className="hover:text-sage" href={telHref(settings.supportPhone)}>
-              {settings.supportPhone}
+            <a className="hover:text-sage" href={storeWhatsAppHref()} target="_blank" rel="noreferrer">
+              {storeWhatsAppNumber}
             </a>
           </dd>
         </div>

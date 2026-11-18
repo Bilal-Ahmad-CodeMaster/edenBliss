@@ -2,7 +2,6 @@ import Link from "next/link";
 import { EditorialImage } from "@/components/editorial-image";
 import { formatMoney } from "@/lib/prices";
 import { orderWhatsAppText, whatsAppHref } from "@/lib/whatsapp";
-import { telHref } from "@/lib/utils";
 import type { CustomerOrder } from "@/types/commerce";
 
 const FLOW = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"] as const;
@@ -108,7 +107,7 @@ export function OrderHistory({
               {order.shipping.phone ? (
                 <>
                   {" · "}
-                  <a className="hover:text-sage" href={telHref(order.shipping.phone)}>
+                  <a className="hover:text-sage" href={whatsAppHref(order.shipping.phone)} target="_blank" rel="noreferrer">
                     {order.shipping.phone}
                   </a>
                 </>

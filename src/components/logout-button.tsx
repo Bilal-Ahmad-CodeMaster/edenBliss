@@ -9,11 +9,20 @@ import { useCartStore } from "@/store/cart-store";
 import { useSessionStore } from "@/store/session-store";
 import { useWishlistStore } from "@/store/wishlist-store";
 
-export function LogoutButton() {
+export function LogoutButton({
+  className,
+  variant = "outline",
+  onDone,
+}: {
+  className?: string;
+  variant?: "outline" | "ghost";
+  onDone?: () => void;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
   async function logout() {
+    if (pending) return;
     setPending(true);
     try {
       await clientFetch("/api/auth/logout", { method: "POST" });
@@ -21,6 +30,7 @@ export function LogoutButton() {
       useWishlistStore.getState().clear();
       useSessionStore.getState().setUser(null);
       toast.success("You have signed out.");
+      onDone?.();
       router.push("/");
       router.refresh();
     } finally {
@@ -29,7 +39,7 @@ export function LogoutButton() {
   }
 
   return (
-    <Button type="button" variant="outline" onClick={logout} disabled={pending}>
+    <Button type="button" variant={variant} className={className} onClick={logout} disabled={pending}>
       {pending ? "Signing out" : "Sign out"}
     </Button>
   );

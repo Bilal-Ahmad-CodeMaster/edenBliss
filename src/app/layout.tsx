@@ -53,7 +53,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${cormorant.variable} ${jakarta.variable} overflow-x-hidden`}>
-      <body className="overflow-x-hidden bg-background font-sans text-foreground antialiased px-4">
+      <body className="overflow-x-hidden bg-background font-sans text-foreground antialiased px-4 md:px-0">
         <Providers>{children}</Providers>
       </body>
     </html>

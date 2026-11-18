@@ -24,7 +24,6 @@ export async function SiteFrame({
         user={user}
         currency={settings.currencySymbol}
         email={settings.supportEmail}
-        phone={settings.supportPhone}
         settings={settings}
       />
       <main className="min-w-0 overflow-x-hidden">{children}</main>

@@ -128,8 +128,8 @@ export const getStoreSettings = cache(async (): Promise<StoreSettingsDTO> => {
       return {
         storeName: settings.storeName,
         supportEmail: settings.supportEmail,
-        supportPhone: settings.supportPhone,
-        whatsappNumber: settings.whatsappNumber || process.env.DEFAULT_WHATSAPP_NUMBER || settings.supportPhone,
+        supportPhone: defaultStoreSettings.supportPhone,
+        whatsappNumber: defaultStoreSettings.whatsappNumber,
         currencySymbol: settings.currencySymbol,
         standardShippingRate: settings.standardShippingRate,
         freeShippingThreshold: settings.freeShippingThreshold,

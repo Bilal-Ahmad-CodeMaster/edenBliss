@@ -1,9 +1,17 @@
+import { defaultStoreSettings } from "@/lib/defaults";
 import type { CustomerOrder } from "@/types/commerce";
 
-export function whatsAppHref(number: string, text: string) {
+export const storeWhatsAppNumber = defaultStoreSettings.whatsappNumber;
+
+export function whatsAppHref(number: string, text = "") {
   const digits = number.replace(/\D/g, "");
   if (!digits) return "";
-  return `https://wa.me/${digits}?text=${encodeURIComponent(text.slice(0, 1600))}`;
+  const note = text.trim();
+  return note ? `https://wa.me/${digits}?text=${encodeURIComponent(note.slice(0, 1600))}` : `https://wa.me/${digits}`;
+}
+
+export function storeWhatsAppHref(text = "Hello Eden Bliss, I would like to speak with the atelier.") {
+  return whatsAppHref(storeWhatsAppNumber, text);
 }
 
 export function orderWhatsAppText(order: CustomerOrder) {

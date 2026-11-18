@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { clientFetch } from "@/lib/client-fetch";
-import { telHref } from "@/lib/utils";
+import { storeWhatsAppHref, storeWhatsAppNumber } from "@/lib/whatsapp";
 import type { StoreSettingsDTO } from "@/types/commerce";
 
 export function SettingsForm({ settings, adminEmail }: { settings: StoreSettingsDTO; adminEmail: string }) {
@@ -53,8 +53,8 @@ export function SettingsForm({ settings, adminEmail }: { settings: StoreSettings
           {settings.supportEmail}
         </a>{" "}
         and{" "}
-        <a className="text-sage underline-offset-4 hover:underline" href={telHref(settings.supportPhone)}>
-          {settings.supportPhone}
+        <a className="text-sage underline-offset-4 hover:underline" href={storeWhatsAppHref()} target="_blank" rel="noreferrer">
+          {storeWhatsAppNumber}
         </a>
         .
       </p>

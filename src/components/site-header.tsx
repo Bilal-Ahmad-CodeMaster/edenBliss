@@ -6,12 +6,13 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Heart, Menu, UserRound } from "lucide-react";
 import { useState } from "react";
 import { CartDrawer } from "@/components/cart-drawer";
+import { LogoutButton } from "@/components/logout-button";
 import { SearchOverlay } from "@/components/search-overlay";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useSessionStore } from "@/store/session-store";
 import { useWishlistCount } from "@/store/wishlist-store";
 import { loginHref } from "@/lib/login-redirect";
-import { telHref } from "@/lib/utils";
+import { storeWhatsAppHref, storeWhatsAppNumber } from "@/lib/whatsapp";
 import type { NavCategory, PublicUser, StoreSettingsDTO } from "@/types/commerce";
 
 export function SiteHeader({
@@ -19,14 +20,12 @@ export function SiteHeader({
   user,
   currency,
   email,
-  phone,
   settings,
 }: {
   categories: NavCategory[];
   user: PublicUser | null;
   currency: string;
   email: string;
-  phone: string;
   settings: Pick<StoreSettingsDTO, "standardShippingRate" | "freeShippingThreshold" | "taxPercentage">;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -146,6 +145,11 @@ export function SiteHeader({
                     <Link href={wishlistHref} className="block px-2 py-2 text-[11px] uppercase tracking-[0.14em] hover:text-sage" onClick={() => setAccountOpen(false)}>
                       Wishlist
                     </Link>
+                    <LogoutButton
+                      variant="ghost"
+                      className="h-auto w-full justify-start px-2 py-2 text-[11px] hover:translate-y-0"
+                      onDone={() => setAccountOpen(false)}
+                    />
                   </>
                 ) : (
                   <>
@@ -246,6 +250,13 @@ export function SiteHeader({
                   <Link href={accountHref} onClick={() => setMenuOpen(false)} className="py-2 text-sm uppercase tracking-[0.16em]">
                     {activeUser ? activeUser.name : "Sign in"}
                   </Link>
+                  {activeUser ? (
+                    <LogoutButton
+                      variant="ghost"
+                      className="h-auto justify-start px-0 py-2 text-sm hover:translate-y-0"
+                      onDone={() => setMenuOpen(false)}
+                    />
+                  ) : null}
                   {isAdmin ? (
                     <Link href="/admin" onClick={() => setMenuOpen(false)} className="py-2 text-sm uppercase tracking-[0.16em] text-sage">
                       Admin
@@ -256,8 +267,8 @@ export function SiteHeader({
                   <a className="block hover:text-sage" href={`mailto:${email}`}>
                     {email}
                   </a>
-                  <a className="block hover:text-sage" href={telHref(phone)}>
-                    {phone}
+                  <a className="block hover:text-sage" href={storeWhatsAppHref()} target="_blank" rel="noreferrer">
+                    {storeWhatsAppNumber}
                   </a>
                 </div>
               </div>

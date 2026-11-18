@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { NewsletterForm } from "@/components/newsletter-form";
-import { telHref } from "@/lib/utils";
+import { storeWhatsAppHref, storeWhatsAppNumber } from "@/lib/whatsapp";
 import type { NavCategory, StoreSettingsDTO } from "@/types/commerce";
 
 export function SiteFooter({
@@ -70,8 +70,8 @@ export function SiteFooter({
               </a>
             </li>
             <li>
-              <a className="nav-link" href={telHref(settings.supportPhone)}>
-                {settings.supportPhone}
+              <a className="nav-link" href={storeWhatsAppHref()} target="_blank" rel="noreferrer">
+                {storeWhatsAppNumber}
               </a>
             </li>
             <li>

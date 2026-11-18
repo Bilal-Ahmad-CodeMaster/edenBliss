@@ -8,6 +8,7 @@ import { VirtualTable } from "@/components/virtual-table";
 import { DeskDialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { clientFetch } from "@/lib/client-fetch";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -247,11 +248,11 @@ export function UserDesk({
         >
           <div className="space-y-2">
             <Label htmlFor="admin-password">Your password</Label>
-            <Input id="admin-password" type="password" autoComplete="current-password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} required />
+            <PasswordInput id="admin-password" autoComplete="current-password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="next-password">New password</Label>
-            <Input id="next-password" type="password" autoComplete="new-password" minLength={8} value={nextPassword} onChange={(event) => setNextPassword(event.target.value)} required />
+            <PasswordInput id="next-password" autoComplete="new-password" minLength={8} value={nextPassword} onChange={(event) => setNextPassword(event.target.value)} required />
           </div>
           <Button type="submit" disabled={pending}>
             {pending ? "Saving" : "Update password"}
@@ -276,7 +277,7 @@ export function UserDesk({
         >
           <div className="space-y-2">
             <Label htmlFor="delete-password">Your password</Label>
-            <Input id="delete-password" type="password" autoComplete="current-password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} required />
+            <PasswordInput id="delete-password" autoComplete="current-password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} required />
           </div>
           <Button type="submit" variant="sale" disabled={pending}>
             {pending ? "Removing" : "Delete account"}

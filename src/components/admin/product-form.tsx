@@ -175,7 +175,7 @@ export function ProductForm({
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-3xl space-y-6">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="min-w-0 space-y-5 pb-1">
       <DeskAlert message={message} />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
@@ -229,7 +229,7 @@ export function ProductForm({
           </button>
         </div>
         {colors.map((color, index) => (
-          <div key={`${color.hexCode}-${index}`} className="space-y-3 border border-line p-3">
+          <div key={`${color.hexCode}-${index}`} className="space-y-4 border border-line p-4">
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
               <Input
                 value={color.colorName}

@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { clientFetch } from "@/lib/client-fetch";
 
@@ -141,9 +142,8 @@ export function ForgotPasswordForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="reset-password">New password</Label>
-        <Input
+        <PasswordInput
           id="reset-password"
-          type="password"
           autoComplete="new-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
@@ -152,9 +152,8 @@ export function ForgotPasswordForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="reset-confirm">Confirm password</Label>
-        <Input
+        <PasswordInput
           id="reset-confirm"
-          type="password"
           autoComplete="new-password"
           value={confirm}
           onChange={(event) => setConfirm(event.target.value)}

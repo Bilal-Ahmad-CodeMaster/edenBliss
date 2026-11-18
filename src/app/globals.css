@@ -48,6 +48,22 @@ body,
   height: 0 !important;
 }
 
+[data-desk-scroll] {
+  scrollbar-width: thin !important;
+  scrollbar-color: #b54b5a transparent;
+}
+
+[data-desk-scroll]::-webkit-scrollbar {
+  display: block !important;
+  width: 8px !important;
+  height: 8px !important;
+}
+
+[data-desk-scroll]::-webkit-scrollbar-thumb {
+  background: #b54b5a;
+  border-radius: 999px;
+}
+
 body {
   min-height: 100%;
   font-family: var(--font-jakarta), system-ui, sans-serif;

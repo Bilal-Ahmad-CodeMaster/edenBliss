@@ -41,8 +41,8 @@ export function OutfitLooks({
         </Button>
       </div>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="w-[min(100%,42rem)] overflow-y-auto">
-          <div className="px-6 pb-10 pt-16">
+        <SheetContent className="w-[min(100%,42rem)] overflow-y-auto overscroll-contain">
+          <div data-lenis-prevent className="px-6 pb-12 pt-16">
             <SheetTitle>Full outfit look</SheetTitle>
             <SheetDescription className="mt-2">How {title} sits when it is styled, and what pairs beside it.</SheetDescription>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">

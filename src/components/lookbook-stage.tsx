@@ -121,7 +121,9 @@ function Hotspot({
       {open && spot && typeof document !== "undefined"
         ? createPortal(
             <div
-              className="fixed z-[80] max-h-[min(28rem,calc(100dvh-2rem))] overflow-y-auto border border-line bg-background p-3 shadow-editorial"
+              data-lenis-prevent
+              data-desk-scroll=""
+              className="fixed z-[80] max-h-[min(28rem,calc(100dvh-2rem))] overflow-y-auto overscroll-contain border border-line bg-background p-4 shadow-editorial"
               style={{ left: spot.left, top: spot.top, width: spot.width }}
             >
               <PinCard pin={pin} currency={currency} onDone={onClose} />

@@ -52,7 +52,7 @@ export function CartDrawer({
           <SheetDescription className="mt-2">{count} {count === 1 ? "piece" : "pieces"}</SheetDescription>
           {!hydrated ? <div className="shimmer mt-8 h-28" /> : null}
           {hydrated && items.length === 0 ? <p className="mt-8 text-sm text-muted">The bag is empty.</p> : null}
-          <ul className="mt-6 flex-1 space-y-4 overflow-y-auto">
+          <ul data-lenis-prevent data-desk-scroll="" className="mt-6 min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1">
             {items.map((item) => (
               <li key={`${item.productId}-${item.sizeLabel}`} className="flex gap-3">
                 <Link href={`/product/${item.slug}`} onClick={() => setOpen(false)} className="relative h-24 w-16 shrink-0 bg-linen">

@@ -6,6 +6,7 @@ import { DeskAlert } from "@/components/admin/desk-alert";
 import { ImageManager } from "@/components/admin/image-manager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { clientFetch } from "@/lib/client-fetch";
 import { useSessionStore } from "@/store/session-store";
@@ -95,11 +96,11 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="current-password">Current password</Label>
-          <Input id="current-password" type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} />
+          <PasswordInput id="current-password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="new-password">New password</Label>
-          <Input id="new-password" type="password" autoComplete="new-password" value={nextPassword} onChange={(event) => setNextPassword(event.target.value)} />
+          <PasswordInput id="new-password" autoComplete="new-password" value={nextPassword} onChange={(event) => setNextPassword(event.target.value)} />
         </div>
       </div>
       <Button type="submit" disabled={pending}>

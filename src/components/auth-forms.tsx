@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { clientFetch } from "@/lib/client-fetch";
 import { RESTRICTED_MESSAGE } from "@/lib/constants";
@@ -87,7 +88,7 @@ export function SignupForm({ nextPath = "/" }: { nextPath?: string }) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" autoComplete="new-password" {...form.register("password")} />
+        <PasswordInput id="password" autoComplete="new-password" {...form.register("password")} />
         {form.formState.errors.password ? (
           <p className="text-sm text-terracotta">{form.formState.errors.password.message}</p>
         ) : null}
@@ -157,7 +158,7 @@ export function LoginForm({ restricted, nextPath = "/" }: { restricted: boolean;
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" autoComplete="current-password" {...form.register("password")} />
+        <PasswordInput id="password" autoComplete="current-password" {...form.register("password")} />
         {form.formState.errors.password ? (
           <p className="text-sm text-terracotta">{form.formState.errors.password.message}</p>
         ) : null}

@@ -71,7 +71,7 @@ export function SearchOverlay({ currency }: { currency: string }) {
       </button>
       {open && mounted
         ? createPortal(
-            <div className="fixed inset-0 z-[70] overflow-y-auto bg-background px-4 py-8 sm:px-8">
+            <div data-lenis-prevent className="fixed inset-0 z-[70] overflow-y-auto overscroll-contain bg-background px-5 py-8 sm:px-8 sm:py-10">
           <div className="mx-auto max-w-3xl">
             <div className="flex items-center justify-between gap-4">
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted">Search</p>
